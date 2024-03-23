@@ -46,7 +46,7 @@ impl Plugin for DmReverb {
   fn run(&mut self, ports: &mut Ports, _features: &mut (), _sample_count: u32) {
     let size = *ports.size;
     let predelay = *ports.predelay;
-    let reverse = if *ports.reverse == 1. { true } else { false };
+    let reverse = *ports.reverse == 1.;
     let speed = *ports.speed;
     let depth = *ports.depth * 0.01;
     let absorb = *ports.absorb * 0.01;
