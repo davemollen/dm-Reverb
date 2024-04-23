@@ -22,6 +22,17 @@ impl EarlyReflections {
     }
   }
 
+  pub fn run(&mut self, size: f32, taps: &mut [Tap; 4]) -> Vec<f32> {
+    let gain = size.scale(MIN_SIZE, MAX_SIZE, MINUS_THREE_DB, MINUS_FIFTEEN_DB);
+
+    taps
+      .iter_mut()
+      .take(2)
+      .zip(self.reflections)
+      .map(|(tap, reflections)| self.process_channel(reflections, size, tap, gain))
+      .collect()
+  }
+
   fn read_early_reflection(
     &self,
     index: usize,
@@ -40,16 +51,5 @@ impl EarlyReflections {
       .map(|(index, time_fraction)| self.read_early_reflection(index, size, time_fraction, tap))
       .sum::<f32>()
       * gain
-  }
-
-  pub fn run(&mut self, size: f32, taps: &mut [Tap; 4]) -> Vec<f32> {
-    let gain = size.scale(MIN_SIZE, MAX_SIZE, MINUS_THREE_DB, MINUS_FIFTEEN_DB);
-
-    taps
-      .iter_mut()
-      .take(2)
-      .zip(self.reflections)
-      .map(|(tap, reflections)| self.process_channel(reflections, size, tap, gain))
-      .collect()
   }
 }

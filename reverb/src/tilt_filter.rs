@@ -17,6 +17,25 @@ impl TiltFilter {
     }
   }
 
+  pub fn run(
+    &mut self,
+    input: (f32, f32),
+    low_frequency: f32,
+    high_frequency: f32,
+    low_gain: f32,
+    high_gain: f32,
+    tilt: f32,
+  ) -> (f32, f32) {
+    if tilt == 0. {
+      input
+    } else {
+      let bilinear_transform_params =
+        self.get_transfer_function_params(low_frequency, high_frequency, low_gain, high_gain, tilt);
+      let biquad_params = self.bilinear_transform(bilinear_transform_params);
+      self.get_biquad_filters_output(input, biquad_params)
+    }
+  }
+
   fn get_transfer_function_params(
     &self,
     low_frequency: f32,
@@ -74,24 +93,5 @@ impl TiltFilter {
       self.biquad_filter_left.run(input.0, a0, a1, a2, b1, b2),
       self.biquad_filter_right.run(input.1, a0, a1, a2, b1, b2),
     )
-  }
-
-  pub fn run(
-    &mut self,
-    input: (f32, f32),
-    low_frequency: f32,
-    high_frequency: f32,
-    low_gain: f32,
-    high_gain: f32,
-    tilt: f32,
-  ) -> (f32, f32) {
-    if tilt == 0. {
-      input
-    } else {
-      let bilinear_transform_params =
-        self.get_transfer_function_params(low_frequency, high_frequency, low_gain, high_gain, tilt);
-      let biquad_params = self.bilinear_transform(bilinear_transform_params);
-      self.get_biquad_filters_output(input, biquad_params)
-    }
   }
 }

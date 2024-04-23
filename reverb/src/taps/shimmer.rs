@@ -18,6 +18,17 @@ impl Shimmer {
     }
   }
 
+  pub fn run(&mut self, dry: (f32, f32), wet: (f32, f32), mix: f32) -> (f32, f32) {
+    let out = if mix > 0. {
+      let grains_out = self.apply_shimmer();
+      self.mix(dry, grains_out, mix)
+    } else {
+      dry
+    };
+    self.write(wet);
+    out
+  }
+
   fn write(&mut self, input: (f32, f32)) {
     self.delay_line[0].write(input.0);
     self.delay_line[1].write(input.1);
@@ -47,16 +58,5 @@ impl Shimmer {
       .fold((0., 0.), | result, item| {
         (result.0 + item.0, result.1 + item.1)
       })
-  }
-
-  pub fn run(&mut self, dry: (f32, f32), wet: (f32, f32), mix: f32) -> (f32, f32) {
-    let out = if mix > 0. {
-      let grains_out = self.apply_shimmer();
-      self.mix(dry, grains_out, mix)
-    } else {
-      dry
-    };
-    self.write(wet);
-    out
   }
 }

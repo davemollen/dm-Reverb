@@ -32,6 +32,35 @@ impl Taps {
     }
   }
 
+  pub fn run(
+    &mut self,
+    input: f32,
+    size: f32,
+    speed: f32,
+    depth: f32,
+    diffuse: f32,
+    absorb: f32,
+    decay: f32,
+    shimmer: f32,
+  ) -> (f32, f32) {
+    let early_reflections_outputs = self.early_reflections.run(size, &mut self.taps);
+
+    let delay_network_outputs = self.read_from_delay_network(size, speed, depth);
+    let delay_network_channels = Self::retrieve_channels_from_delay_network(&delay_network_outputs);
+    self
+      .saturation_activator
+      .set_amplitude(delay_network_channels);
+    let mixed =
+      self.mix_delay_network_and_reflections(delay_network_channels, early_reflections_outputs);
+    let shimmer = self
+      .shimmer
+      .run((input, input), delay_network_channels, shimmer);
+    let feedback_matrix_outputs = Self::apply_feedback_matrix(&delay_network_outputs);
+    self.process_and_write_taps(shimmer, feedback_matrix_outputs, diffuse, absorb, decay);
+
+    mixed
+  }
+
   fn read_from_delay_network(&mut self, size: f32, speed: f32, depth: f32) -> Vec<f32> {
     let phase = self.lfo_phasor.run(speed);
     self
@@ -99,34 +128,5 @@ impl Taps {
     let left_out = (left_delay_network_out + early_reflections_output[0]) * 0.5;
     let right_out = (right_delay_network_out + early_reflections_output[1]) * 0.5;
     (left_out, right_out)
-  }
-
-  pub fn run(
-    &mut self,
-    input: f32,
-    size: f32,
-    speed: f32,
-    depth: f32,
-    diffuse: f32,
-    absorb: f32,
-    decay: f32,
-    shimmer: f32,
-  ) -> (f32, f32) {
-    let early_reflections_outputs = self.early_reflections.run(size, &mut self.taps);
-
-    let delay_network_outputs = self.read_from_delay_network(size, speed, depth);
-    let delay_network_channels = Self::retrieve_channels_from_delay_network(&delay_network_outputs);
-    self
-      .saturation_activator
-      .set_amplitude(delay_network_channels);
-    let mixed =
-      self.mix_delay_network_and_reflections(delay_network_channels, early_reflections_outputs);
-    let shimmer = self
-      .shimmer
-      .run((input, input), delay_network_channels, shimmer);
-    let feedback_matrix_outputs = Self::apply_feedback_matrix(&delay_network_outputs);
-    self.process_and_write_taps(shimmer, feedback_matrix_outputs, diffuse, absorb, decay);
-
-    mixed
   }
 }

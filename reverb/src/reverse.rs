@@ -15,6 +15,11 @@ impl Reverse {
     }
   }
 
+  pub fn run(&mut self, delay_line: &mut DelayLine, time: f32) -> f32 {
+    let reverse_delay = self.reverse_delay(delay_line, time);
+    reverse_delay
+  }
+
   fn read_delay_line(
     &mut self,
     delay_line: &mut DelayLine,
@@ -44,10 +49,5 @@ impl Reverse {
     let reverse_delay_a = self.read_delay_line(delay_line, phasor_a, time, xfade_a);
     let reverse_delay_b = self.read_delay_line(delay_line, phasor_b, time, xfade_b);
     reverse_delay_a + reverse_delay_b
-  }
-
-  pub fn run(&mut self, delay_line: &mut DelayLine, time: f32) -> f32 {
-    let reverse_delay = self.reverse_delay(delay_line, time);
-    reverse_delay
   }
 }

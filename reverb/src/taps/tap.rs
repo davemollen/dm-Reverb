@@ -43,25 +43,6 @@ impl Tap {
     }
   }
 
-  fn vibrato_read(&mut self, size: f32, lfo_phase: f32, lfo_depth: f32) -> f32 {
-    let lfo_phase_input = (lfo_phase + self.lfo_phase_offset) % 1. * TAU;
-    let lfo = lfo_phase_input.fast_sin() * lfo_depth.abs();
-
-    self
-      .delay_line
-      .read(self.time_fraction * size + lfo, Interpolation::Linear)
-  }
-
-  fn grain_read(&mut self, size: f32, lfo_phase: f32, lfo_depth: f32) -> f32 {
-    self.grains.run(
-      &mut self.delay_line,
-      size,
-      self.time_fraction,
-      lfo_phase,
-      lfo_depth,
-    )
-  }
-
   pub fn delay_network_read(&mut self, size: f32, lfo_phase: f32, lfo_depth: f32) -> f32 {
     if lfo_depth == 0. {
       self
@@ -102,5 +83,24 @@ impl Tap {
       clean_out
     }; 
     self.dc_block.run(saturation_out * decay * 0.5)
+  }
+
+  fn vibrato_read(&mut self, size: f32, lfo_phase: f32, lfo_depth: f32) -> f32 {
+    let lfo_phase_input = (lfo_phase + self.lfo_phase_offset) % 1. * TAU;
+    let lfo = lfo_phase_input.fast_sin() * lfo_depth.abs();
+
+    self
+      .delay_line
+      .read(self.time_fraction * size + lfo, Interpolation::Linear)
+  }
+
+  fn grain_read(&mut self, size: f32, lfo_phase: f32, lfo_depth: f32) -> f32 {
+    self.grains.run(
+      &mut self.delay_line,
+      size,
+      self.time_fraction,
+      lfo_phase,
+      lfo_depth,
+    )
   }
 }

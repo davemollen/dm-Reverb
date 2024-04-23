@@ -16,6 +16,14 @@ impl OnePoleFilter {
     Self { sample_rate, z: 0. }
   }
 
+  pub fn run(&mut self, input: f32, cutoff_freq: f32, mode: Mode) -> f32 {
+    if (input - self.z).is_subnormal() {
+      input
+    } else {
+      self.apply_filter(input, cutoff_freq, mode)
+    }
+  }
+
   fn convert_linear_input_to_coefficient(&self, r: f32) -> f32 {
     (1. - r) / 44100. * self.sample_rate
   }
@@ -37,13 +45,5 @@ impl OnePoleFilter {
     let output = self.mix(self.z, input, coefficient);
     self.z = output;
     output
-  }
-
-  pub fn run(&mut self, input: f32, cutoff_freq: f32, mode: Mode) -> f32 {
-    if (input - self.z).is_subnormal() {
-      input
-    } else {
-      self.apply_filter(input, cutoff_freq, mode)
-    }
   }
 }
