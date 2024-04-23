@@ -31,7 +31,7 @@ impl Grains {
     }
   }
 
-  pub fn run(
+  pub fn process(
     &mut self,
     delay_line: &mut DelayLine,
     size: f32,
@@ -71,7 +71,7 @@ impl Grains {
       .enumerate()
       .map(|(index, grain)| {
         let phase = (lfo_phase + index as f32 * 0.5) % 1.;
-        let trigger = grain.delta.run(phase) < 0.;
+        let trigger = grain.delta.process(phase) < 0.;
         if trigger {
           grain.start_position = random::<f32>() * lfo_depth;
         };

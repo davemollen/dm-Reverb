@@ -17,7 +17,7 @@ impl TiltFilter {
     }
   }
 
-  pub fn run(
+  pub fn process(
     &mut self,
     input: (f32, f32),
     low_frequency: f32,
@@ -90,8 +90,8 @@ impl TiltFilter {
   ) -> (f32, f32) {
     let (a0, a1, a2, b1, b2) = biquad_params;
     (
-      self.biquad_filter_left.run(input.0, a0, a1, a2, b1, b2),
-      self.biquad_filter_right.run(input.1, a0, a1, a2, b1, b2),
+      self.biquad_filter_left.process(input.0, a0, a1, a2, b1, b2),
+      self.biquad_filter_right.process(input.1, a0, a1, a2, b1, b2),
     )
   }
 }

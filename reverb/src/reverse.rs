@@ -15,7 +15,7 @@ impl Reverse {
     }
   }
 
-  pub fn run(&mut self, delay_line: &mut DelayLine, time: f32) -> f32 {
+  pub fn process(&mut self, delay_line: &mut DelayLine, time: f32) -> f32 {
     let reverse_delay = self.reverse_delay(delay_line, time);
     reverse_delay
   }
@@ -36,7 +36,7 @@ impl Reverse {
 
   fn reverse_delay(&mut self, delay_line: &mut DelayLine, time: f32) -> f32 {
     let freq = 1000. / time;
-    let phasor_a = self.phasor.run(freq) * 2.;
+    let phasor_a = self.phasor.process(freq) * 2.;
     let phasor_b = (phasor_a + 1.) % 2.;
 
     let xfade_factor = time / MIN_PREDELAY;

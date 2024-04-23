@@ -32,7 +32,7 @@ impl Taps {
     }
   }
 
-  pub fn run(
+  pub fn process(
     &mut self,
     input: f32,
     size: f32,
@@ -43,7 +43,7 @@ impl Taps {
     decay: f32,
     shimmer: f32,
   ) -> (f32, f32) {
-    let early_reflections_outputs = self.early_reflections.run(size, &mut self.taps);
+    let early_reflections_outputs = self.early_reflections.process(size, &mut self.taps);
 
     let delay_network_outputs = self.read_from_delay_network(size, speed, depth);
     let delay_network_channels = Self::retrieve_channels_from_delay_network(&delay_network_outputs);
@@ -54,7 +54,7 @@ impl Taps {
       self.mix_delay_network_and_reflections(delay_network_channels, early_reflections_outputs);
     let shimmer = self
       .shimmer
-      .run((input, input), delay_network_channels, shimmer);
+      .process((input, input), delay_network_channels, shimmer);
     let feedback_matrix_outputs = Self::apply_feedback_matrix(&delay_network_outputs);
     self.process_and_write_taps(shimmer, feedback_matrix_outputs, diffuse, absorb, decay);
 
@@ -62,7 +62,7 @@ impl Taps {
   }
 
   fn read_from_delay_network(&mut self, size: f32, speed: f32, depth: f32) -> Vec<f32> {
-    let phase = self.lfo_phasor.run(speed);
+    let phase = self.lfo_phasor.process(speed);
     self
       .taps
       .iter_mut()

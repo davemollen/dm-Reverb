@@ -28,6 +28,6 @@ impl SaturationActivator {
 
     self
       .smooth_saturation_gain
-      .run(saturation_gain, 3., Mode::Hertz)
+      .process(saturation_gain, 3., Mode::Hertz)
   }
 }

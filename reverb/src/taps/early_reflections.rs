@@ -22,7 +22,7 @@ impl EarlyReflections {
     }
   }
 
-  pub fn run(&mut self, size: f32, taps: &mut [Tap; 4]) -> Vec<f32> {
+  pub fn process(&mut self, size: f32, taps: &mut [Tap; 4]) -> Vec<f32> {
     let gain = size.scale(MIN_SIZE, MAX_SIZE, MINUS_THREE_DB, MINUS_FIFTEEN_DB);
 
     taps

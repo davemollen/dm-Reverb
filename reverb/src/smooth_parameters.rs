@@ -28,7 +28,7 @@ impl SmoothParameters {
     }
   }
 
-  pub fn run(
+  pub fn process(
     &mut self,
     reverse: bool,
     predelay: f32,
@@ -43,16 +43,16 @@ impl SmoothParameters {
   ) -> (f32, f32, f32, f32, f32, f32, f32, f32, f32, f32, f32) {
     let reverse = self
       .smooth_reverse
-      .run(if reverse { 1. } else { 0. }, 12., Mode::Hertz);
-    let predelay = self.smooth_predelay.run(predelay, 7., Mode::Hertz);
-    let size = self.smooth_size.run(size, 2., Mode::Hertz);
+      .process(if reverse { 1. } else { 0. }, 12., Mode::Hertz);
+    let predelay = self.smooth_predelay.process(predelay, 7., Mode::Hertz);
+    let size = self.smooth_size.process(size, 2., Mode::Hertz);
     let depth = self
       .smooth_depth
-      .run(depth * depth * depth.signum() * MAX_DEPTH, 12., Mode::Hertz);
-    let absorb = self.smooth_absorb.run(absorb, 12., Mode::Hertz);
-    let tilt = self.smooth_tilt.run(tilt, 12., Mode::Hertz);
-    let shimmer = self.smooth_shimmer.run(shimmer.fast_pow(2.), 12., Mode::Hertz);
-    let mix = self.smooth_mix.run(mix, 12., Mode::Hertz);
+      .process(depth * depth * depth.signum() * MAX_DEPTH, 12., Mode::Hertz);
+    let absorb = self.smooth_absorb.process(absorb, 12., Mode::Hertz);
+    let tilt = self.smooth_tilt.process(tilt, 12., Mode::Hertz);
+    let shimmer = self.smooth_shimmer.process(shimmer.fast_pow(2.), 12., Mode::Hertz);
+    let mix = self.smooth_mix.process(mix, 12., Mode::Hertz);
     let diffuse = (absorb * 3.).min(1.) * 0.8;
     let absorb = (absorb - 0.3333333).max(0.) * 1.5;
 

@@ -63,7 +63,7 @@ impl Plugin for DmReverb {
 
     input_channels.zip(output_channels).for_each(
       |((input_left, input_right), (output_left, output_right))| {
-        let reverb_output = self.reverb.run(
+        let reverb_output = self.reverb.process(
           (*input_left, *input_right),
           reverse,
           predelay,

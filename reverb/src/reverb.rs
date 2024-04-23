@@ -38,7 +38,7 @@ impl Reverb {
     }
   }
 
-  pub fn run(
+  pub fn process(
     &mut self,
     input: (f32, f32),
     reverse: bool,
@@ -53,29 +53,29 @@ impl Reverb {
     mix: f32,
   ) -> (f32, f32) {
     let (reverse, predelay, size, speed, depth, absorb, diffuse, decay, tilt, shimmer, mix) =
-      self.smooth_parameters.run(
+      self.smooth_parameters.process(
         reverse, predelay, size, speed, depth, absorb, decay, tilt, shimmer, mix,
       );
 
     let predelay_output = self.get_predelay_output(input, predelay, reverse);
     let taps_output = self
       .taps
-      .run(predelay_output, size, speed, depth, diffuse, absorb, decay, shimmer);
+      .process(predelay_output, size, speed, depth, diffuse, absorb, decay, shimmer);
 
     let tilt_filter_output = self.apply_tilt_filter(taps_output, tilt);
-    Mix::run(input, tilt_filter_output, mix)
+    Mix::process(input, tilt_filter_output, mix)
   }
 
   fn get_predelay_output(&mut self, input: (f32, f32), time: f32, reverse: f32) -> f32 {
     let predelay_output = if reverse == 0. {
       self.predelay_tap.read(time, Interpolation::Linear)
     } else if reverse == 1. {
-      self.reverse.run(&mut self.predelay_tap, time)
+      self.reverse.process(&mut self.predelay_tap, time)
     } else {
       self
         .predelay_tap
         .read(time, Interpolation::Linear)
-        .mix(self.reverse.run(&mut self.predelay_tap, time), reverse)
+        .mix(self.reverse.process(&mut self.predelay_tap, time), reverse)
     };
     self.predelay_tap.write((input.0 + input.1) * 0.5);
     predelay_output
@@ -87,7 +87,7 @@ impl Reverb {
     } else {
       self
         .tilt_filter
-        .run(input, 520., 4000., TWELVE_DB, TWENTY_FOUR_DB, tilt)
+        .process(input, 520., 4000., TWELVE_DB, TWENTY_FOUR_DB, tilt)
     }
   }
 }

@@ -66,11 +66,11 @@ impl Tap {
   }
 
   pub fn apply_absorb(&mut self, input: f32, absorb: f32) -> f32 {
-    self.one_pole_filter.run(input, absorb, Mode::Linear)
+    self.one_pole_filter.process(input, absorb, Mode::Linear)
   }
 
   pub fn apply_diffuse(&mut self, input: f32, diffuse: f32) -> f32 {
-    self.all_pass_filter.run(input, self.diffuser_time, diffuse)
+    self.all_pass_filter.process(input, self.diffuser_time, diffuse)
   }
 
   pub fn apply_saturation(&mut self, input: f32, decay: f32, saturation_gain: f32) -> f32 {
@@ -82,7 +82,7 @@ impl Tap {
     } else {
       clean_out
     }; 
-    self.dc_block.run(saturation_out * decay * 0.5)
+    self.dc_block.process(saturation_out * decay * 0.5)
   }
 
   fn vibrato_read(&mut self, size: f32, lfo_phase: f32, lfo_depth: f32) -> f32 {
@@ -95,7 +95,7 @@ impl Tap {
   }
 
   fn grain_read(&mut self, size: f32, lfo_phase: f32, lfo_depth: f32) -> f32 {
-    self.grains.run(
+    self.grains.process(
       &mut self.delay_line,
       size,
       self.time_fraction,

@@ -82,7 +82,7 @@ impl Plugin for DmReverb {
       let right_channel_in = channel_samples.get_mut(1).unwrap();
       let input_right = *right_channel_in;
 
-      let (reverb_left, reverb_right) = self.reverb.run(
+      let (reverb_left, reverb_right) = self.reverb.process(
         (input_left, input_right),
         reverse,
         predelay,

@@ -16,7 +16,7 @@ impl OnePoleFilter {
     Self { sample_rate, z: 0. }
   }
 
-  pub fn run(&mut self, input: f32, cutoff_freq: f32, mode: Mode) -> f32 {
+  pub fn process(&mut self, input: f32, cutoff_freq: f32, mode: Mode) -> f32 {
     if (input - self.z).is_subnormal() {
       input
     } else {

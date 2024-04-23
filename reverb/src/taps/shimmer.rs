@@ -18,7 +18,7 @@ impl Shimmer {
     }
   }
 
-  pub fn run(&mut self, dry: (f32, f32), wet: (f32, f32), mix: f32) -> (f32, f32) {
+  pub fn process(&mut self, dry: (f32, f32), wet: (f32, f32), mix: f32) -> (f32, f32) {
     let out = if mix > 0. {
       let grains_out = self.apply_shimmer();
       self.mix(dry, grains_out, mix)
@@ -42,7 +42,7 @@ impl Shimmer {
   }
 
   fn apply_shimmer(&mut self) -> (f32, f32) {
-    let main_phase = self.phasor.run(-5.);
+    let main_phase = self.phasor.process(-5.);
 
     (0..2)
       .map(|index| {
