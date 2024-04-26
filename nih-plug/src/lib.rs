@@ -77,13 +77,12 @@ impl Plugin for DmReverb {
     let mix = self.params.mix.value();
 
     buffer.iter_samples().for_each(|mut channel_samples| {
-      let left_channel_in = channel_samples.get_mut(0).unwrap();
-      let input_left = *left_channel_in;
-      let right_channel_in = channel_samples.get_mut(1).unwrap();
-      let input_right = *right_channel_in;
+      let channel_iterator = &mut channel_samples.iter_mut();
+      let left_channel = channel_iterator.next().unwrap();
+      let right_channel = channel_iterator.next().unwrap();
 
       let (reverb_left, reverb_right) = self.reverb.process(
-        (input_left, input_right),
+        (*left_channel, *right_channel),
         reverse,
         predelay,
         size,
@@ -96,10 +95,8 @@ impl Plugin for DmReverb {
         mix,
       );
 
-      let left_channel_out = channel_samples.get_mut(0).unwrap();
-      *left_channel_out = reverb_left;
-      let right_channel_out = channel_samples.get_mut(1).unwrap();
-      *right_channel_out = reverb_right;
+      *left_channel = reverb_left;
+      *right_channel = reverb_right;
     });
     ProcessStatus::Normal
   }
@@ -124,9 +121,9 @@ impl ClapPlugin for DmReverb {
 impl Vst3Plugin for DmReverb {
   const VST3_CLASS_ID: [u8; 16] = *b"dm-Reverb.......";
   const VST3_SUBCATEGORIES: &'static [Vst3SubCategory] = &[
-    Vst3SubCategory::Fx, 
+    Vst3SubCategory::Fx,
     Vst3SubCategory::Reverb,
-    Vst3SubCategory::Stereo
+    Vst3SubCategory::Stereo,
   ];
 }
 
