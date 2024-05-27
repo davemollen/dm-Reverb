@@ -17,7 +17,7 @@ fn reverb_bench(c: &mut Criterion) {
   c.bench_function("reverb", |b| {
     b.iter(|| {
       for signal in &signal_stream {
-        reverb.process(*signal, false, 7., 80., 3., -0.2, 0.8, 0.8, 0.1, 0., 0.5);
+        reverb.process(*signal, false, 7., 80., 3., -0.2, 0.8, 0.8, 0.1, 0.5, 0.5);
       }
     })
   });

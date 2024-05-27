@@ -5,15 +5,20 @@ use crate::shared::{
 };
 use std::f32::consts::PI;
 
+const FREQUENCY: f32 = -5.;
+const WINDOW_SIZE: f32 = 200.;
+
 pub struct Shimmer {
-  delay_line: Vec<DelayLine>,
+  delay_lines: Vec<DelayLine>,
   phasor: Phasor,
 }
 
 impl Shimmer {
   pub fn new(sample_rate: f32) -> Self {
+    let delay_length = (sample_rate * WINDOW_SIZE / 1000.) as usize;
+
     Self {
-      delay_line: vec![DelayLine::new((sample_rate * 0.2) as usize, sample_rate); 2],
+      delay_lines: vec![DelayLine::new(delay_length, sample_rate); 2],
       phasor: Phasor::new(sample_rate),
     }
   }
@@ -30,8 +35,8 @@ impl Shimmer {
   }
 
   fn write(&mut self, input: (f32, f32)) {
-    self.delay_line[0].write(input.0);
-    self.delay_line[1].write(input.1);
+    self.delay_lines[0].write(input.0);
+    self.delay_lines[1].write(input.1);
   }
 
   fn mix(&self, a: (f32, f32), b: (f32, f32), factor: f32) -> (f32, f32) {
@@ -42,21 +47,33 @@ impl Shimmer {
   }
 
   fn apply_shimmer(&mut self) -> (f32, f32) {
-    let main_phase = self.phasor.process(-5.);
+    let main_phase = self.phasor.process(FREQUENCY);
 
     (0..2)
       .map(|index| {
-        let phase = if index == 0 { main_phase } else { (main_phase + 0.5) % 1. };
-        let time = phase * 200.;
+        let phase = if index == 0 {
+          main_phase
+        } else {
+          Self::wrap(main_phase + 0.5)
+        };
+        let time = phase * WINDOW_SIZE;
         let window = (phase * PI).fast_sin();
         let window = window * window;
         (
-          self.delay_line[0].read(time, Interpolation::Linear) * window,
-          self.delay_line[1].read(time, Interpolation::Linear) * window
+          self.delay_lines[0].read(time, Interpolation::Linear) * window,
+          self.delay_lines[1].read(time, Interpolation::Linear) * window,
         )
       })
-      .fold((0., 0.), | result, item| {
+      .fold((0., 0.), |result, item| {
         (result.0 + item.0, result.1 + item.1)
       })
+  }
+
+  fn wrap(x: f32) -> f32 {
+    if x >= 1. {
+      x - 1.
+    } else {
+      x
+    }
   }
 }
