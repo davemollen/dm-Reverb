@@ -1,17 +1,17 @@
-use crate::shared::one_pole_filter::{Mode, OnePoleFilter};
+use crate::shared::param_filter::ParamFilter;
 
 const SATURATION_THRESHOLD: f32 = 0.75;
 
 pub struct SaturationActivator {
   amplitude: f32,
-  smooth_saturation_gain: OnePoleFilter,
+  smooth_saturation_gain: ParamFilter,
 }
 
 impl SaturationActivator {
   pub fn new(sample_rate: f32) -> Self {
     Self {
       amplitude: 0.,
-      smooth_saturation_gain: OnePoleFilter::new(sample_rate),
+      smooth_saturation_gain: ParamFilter::new(sample_rate, 3.),
     }
   }
 
@@ -26,8 +26,6 @@ impl SaturationActivator {
       0.
     };
 
-    self
-      .smooth_saturation_gain
-      .process(saturation_gain, 3., Mode::Hertz)
+    self.smooth_saturation_gain.process(saturation_gain)
   }
 }

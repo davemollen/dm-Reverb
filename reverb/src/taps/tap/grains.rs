@@ -5,16 +5,15 @@ use crate::shared::{
   float_ext::FloatExt,
 };
 use delta::Delta;
-use rand::random;
 use std::f32::consts::PI;
 
 const FADE_THRESHOLD_FACTOR: f32 = 0.05;
 const FADE_THRESHOLD: f32 = MAX_DEPTH * FADE_THRESHOLD_FACTOR;
 
-#[derive(Clone, Copy)]
 struct Grain {
   start_position: f32,
   delta: Delta,
+  phase_offset: f32,
 }
 
 pub struct Grains {
@@ -24,10 +23,18 @@ pub struct Grains {
 impl Grains {
   pub fn new() -> Self {
     Self {
-      grains: [Grain {
-        start_position: 0.,
-        delta: Delta::new(),
-      }; 2],
+      grains: [
+        Grain {
+          start_position: 0.,
+          phase_offset: 0.,
+          delta: Delta::new(),
+        },
+        Grain {
+          start_position: 0.,
+          phase_offset: 0.5,
+          delta: Delta::new(),
+        },
+      ],
     }
   }
 
@@ -68,12 +75,11 @@ impl Grains {
     self
       .grains
       .iter_mut()
-      .enumerate()
-      .map(|(index, grain)| {
-        let phase = (lfo_phase + index as f32 * 0.5) % 1.;
+      .map(|grain| {
+        let phase = (lfo_phase + grain.phase_offset) % 1.;
         let trigger = grain.delta.process(phase) < 0.;
         if trigger {
-          grain.start_position = random::<f32>() * lfo_depth;
+          grain.start_position = fastrand::f32() * lfo_depth;
         };
         let window = (phase * PI).fast_sin();
         let time = size * time_fraction + grain.start_position;

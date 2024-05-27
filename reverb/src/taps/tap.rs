@@ -1,14 +1,16 @@
 mod allpass_filter;
 mod dc_block;
 mod grains;
+mod one_pole_filter;
 use crate::shared::{
   constants::{MAX_DEPTH, MAX_SIZE},
   delay_line::{DelayLine, Interpolation},
   float_ext::FloatExt,
-  one_pole_filter::{Mode, OnePoleFilter},
 };
 use std::f32::consts::TAU;
-use {allpass_filter::AllpassFilter, dc_block::DcBlock, grains::Grains};
+use {
+  allpass_filter::AllpassFilter, dc_block::DcBlock, grains::Grains, one_pole_filter::OnePoleFilter,
+};
 
 pub struct Tap {
   time_fraction: f32,
@@ -66,11 +68,13 @@ impl Tap {
   }
 
   pub fn apply_absorb(&mut self, input: f32, absorb: f32) -> f32 {
-    self.one_pole_filter.process(input, absorb, Mode::Linear)
+    self.one_pole_filter.process(input, absorb)
   }
 
   pub fn apply_diffuse(&mut self, input: f32, diffuse: f32) -> f32 {
-    self.all_pass_filter.process(input, self.diffuser_time, diffuse)
+    self
+      .all_pass_filter
+      .process(input, self.diffuser_time, diffuse)
   }
 
   pub fn apply_saturation(&mut self, input: f32, decay: f32, saturation_gain: f32) -> f32 {
@@ -81,7 +85,7 @@ impl Tap {
       input.fast_atan2().clamp(-1., 1.) * saturation_gain + clean_out
     } else {
       clean_out
-    }; 
+    };
     self.dc_block.process(saturation_out * decay * 0.5)
   }
 

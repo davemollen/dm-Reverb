@@ -14,6 +14,9 @@ pub trait FloatExt {
   fn fast_sin_bhaskara(self) -> Self;
   fn fast_cos_bhaskara(self) -> Self;
   fn fast_pow(self, exponent: Self) -> Self;
+  fn fast_exp(self) -> Self;
+  fn mstosamps(self, sample_rate: Self) -> Self;
+  fn is_equal_to(self, other: Self) -> bool;
 }
 
 impl FloatExt for f32 {
@@ -121,6 +124,25 @@ impl FloatExt for f32 {
 
   fn fast_pow(self, exponent: Self) -> Self {
     pow2(exponent * log2(self))
+  }
+
+  /// Exponential function.
+  fn fast_exp(self) -> Self {
+    pow2(1.442695040_f32 * self)
+  }
+
+  /// Convert milliseconds to samples based on the samplerate.
+  fn mstosamps(self, sample_rate: Self) -> Self {
+    self * 0.001 * sample_rate
+  }
+
+  /// Check if one value is equal to the other
+  fn is_equal_to(self, other: Self) -> bool {
+    (if self > other {
+      self - other
+    } else {
+      other - self
+    }) <= Self::EPSILON
   }
 }
 

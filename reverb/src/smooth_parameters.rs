@@ -1,30 +1,27 @@
-use crate::shared::{
-  constants::MAX_DEPTH,
-  one_pole_filter::{Mode, OnePoleFilter}, float_ext::FloatExt,
-};
+use crate::shared::{constants::MAX_DEPTH, float_ext::FloatExt, param_filter::ParamFilter};
 
 pub struct SmoothParameters {
-  smooth_reverse: OnePoleFilter,
-  smooth_predelay: OnePoleFilter,
-  smooth_size: OnePoleFilter,
-  smooth_depth: OnePoleFilter,
-  smooth_absorb: OnePoleFilter,
-  smooth_tilt: OnePoleFilter,
-  smooth_shimmer: OnePoleFilter,
-  smooth_mix: OnePoleFilter,
+  smooth_reverse: ParamFilter,
+  smooth_predelay: ParamFilter,
+  smooth_size: ParamFilter,
+  smooth_depth: ParamFilter,
+  smooth_absorb: ParamFilter,
+  smooth_tilt: ParamFilter,
+  smooth_shimmer: ParamFilter,
+  smooth_mix: ParamFilter,
 }
 
 impl SmoothParameters {
   pub fn new(sample_rate: f32) -> Self {
     Self {
-      smooth_reverse: OnePoleFilter::new(sample_rate),
-      smooth_predelay: OnePoleFilter::new(sample_rate),
-      smooth_size: OnePoleFilter::new(sample_rate),
-      smooth_depth: OnePoleFilter::new(sample_rate),
-      smooth_absorb: OnePoleFilter::new(sample_rate),
-      smooth_tilt: OnePoleFilter::new(sample_rate),
-      smooth_shimmer: OnePoleFilter::new(sample_rate),
-      smooth_mix: OnePoleFilter::new(sample_rate),
+      smooth_reverse: ParamFilter::new(sample_rate, 12.),
+      smooth_predelay: ParamFilter::new(sample_rate, 7.),
+      smooth_size: ParamFilter::new(sample_rate, 2.),
+      smooth_depth: ParamFilter::new(sample_rate, 12.),
+      smooth_absorb: ParamFilter::new(sample_rate, 12.),
+      smooth_tilt: ParamFilter::new(sample_rate, 12.),
+      smooth_shimmer: ParamFilter::new(sample_rate, 12.),
+      smooth_mix: ParamFilter::new(sample_rate, 12.),
     }
   }
 
@@ -41,18 +38,16 @@ impl SmoothParameters {
     shimmer: f32,
     mix: f32,
   ) -> (f32, f32, f32, f32, f32, f32, f32, f32, f32, f32, f32) {
-    let reverse = self
-      .smooth_reverse
-      .process(if reverse { 1. } else { 0. }, 12., Mode::Hertz);
-    let predelay = self.smooth_predelay.process(predelay, 7., Mode::Hertz);
-    let size = self.smooth_size.process(size, 2., Mode::Hertz);
+    let reverse = self.smooth_reverse.process(if reverse { 1. } else { 0. });
+    let predelay = self.smooth_predelay.process(predelay);
+    let size = self.smooth_size.process(size);
     let depth = self
       .smooth_depth
-      .process(depth * depth * depth.signum() * MAX_DEPTH, 12., Mode::Hertz);
-    let absorb = self.smooth_absorb.process(absorb, 12., Mode::Hertz);
-    let tilt = self.smooth_tilt.process(tilt, 12., Mode::Hertz);
-    let shimmer = self.smooth_shimmer.process(shimmer.fast_pow(2.), 12., Mode::Hertz);
-    let mix = self.smooth_mix.process(mix, 12., Mode::Hertz);
+      .process(depth * depth * depth.signum() * MAX_DEPTH);
+    let absorb = self.smooth_absorb.process(absorb);
+    let tilt = self.smooth_tilt.process(tilt);
+    let shimmer = self.smooth_shimmer.process(shimmer.fast_pow(2.));
+    let mix = self.smooth_mix.process(mix);
     let diffuse = (absorb * 3.).min(1.) * 0.8;
     let absorb = (absorb - 0.3333333).max(0.) * 1.5;
 
