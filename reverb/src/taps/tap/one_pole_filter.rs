@@ -12,8 +12,9 @@ impl OnePoleFilter {
   }
 
   pub fn process(&mut self, input: f32, r: f32) -> f32 {
-    let a0 = (1. - r) * self.t;
-    let b1 = 1.0 - a0;
+    let b1 = r * self.t;
+    let a0 = 1.0 - b1;
+
     self.z = input * a0 + self.z * b1;
     self.z
   }
