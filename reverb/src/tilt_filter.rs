@@ -29,14 +29,14 @@ impl TiltFilter {
     if tilt == 0. {
       input
     } else {
-      let bilinear_transform_params =
-        self.get_transfer_function_params(low_frequency, high_frequency, low_gain, high_gain, tilt);
-      let biquad_params = self.bilinear_transform(bilinear_transform_params);
-      self.get_biquad_filters_output(input, biquad_params)
+      let s_domain_coefficients =
+        self.get_s_domain_coefficients(low_frequency, high_frequency, low_gain, high_gain, tilt);
+      let z_domain_coefficients = self.apply_bilinear_transform(s_domain_coefficients);
+      self.get_biquad_filters_output(input, z_domain_coefficients)
     }
   }
 
-  fn get_transfer_function_params(
+  fn get_s_domain_coefficients(
     &self,
     low_frequency: f32,
     high_frequency: f32,
@@ -68,7 +68,7 @@ impl TiltFilter {
     (a0, a1, a2, b0, b1, b2)
   }
 
-  fn bilinear_transform(
+  fn apply_bilinear_transform(
     &self,
     params: (f32, f32, f32, f32, f32, f32),
   ) -> (f32, f32, f32, f32, f32) {
@@ -91,7 +91,9 @@ impl TiltFilter {
     let (a0, a1, a2, b1, b2) = biquad_params;
     (
       self.biquad_filter_left.process(input.0, a0, a1, a2, b1, b2),
-      self.biquad_filter_right.process(input.1, a0, a1, a2, b1, b2),
+      self
+        .biquad_filter_right
+        .process(input.1, a0, a1, a2, b1, b2),
     )
   }
 }

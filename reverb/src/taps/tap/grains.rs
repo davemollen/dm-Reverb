@@ -76,7 +76,7 @@ impl Grains {
       .grains
       .iter_mut()
       .map(|grain| {
-        let phase = (lfo_phase + grain.phase_offset) % 1.;
+        let phase = Self::wrap(lfo_phase + grain.phase_offset);
         let trigger = grain.delta.process(phase) < 0.;
         if trigger {
           grain.start_position = fastrand::f32() * lfo_depth;
@@ -87,5 +87,13 @@ impl Grains {
         delay_line.read(time, Interpolation::Linear) * window * window
       })
       .sum()
+  }
+
+  fn wrap(x: f32) -> f32 {
+    if x >= 1. {
+      x - 1.
+    } else {
+      x
+    }
   }
 }
