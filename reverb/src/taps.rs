@@ -50,7 +50,7 @@ impl Taps {
     decay: f32,
     shimmer: f32,
   ) -> (f32, f32) {
-    let early_reflections_outputs = self.early_reflections.process(size, &mut self.taps);
+    let early_reflections = self.early_reflections.process(size, &mut self.taps);
 
     let delay_network_outputs = self.read_from_delay_network(size, speed, depth);
     let delay_network_channels = Self::retrieve_channels_from_delay_network(delay_network_outputs);
@@ -64,7 +64,7 @@ impl Taps {
     let feedback_matrix_outputs = Self::apply_matrix(delay_network_outputs);
     self.process_and_write_taps(shimmer, feedback_matrix_outputs, diffuse, absorb, decay);
 
-    self.mix_delay_network_and_reflections(delay_network_channels, early_reflections_outputs)
+    self.mix_delay_network_and_reflections(delay_network_channels, early_reflections)
   }
 
   fn read_from_delay_network(&mut self, size: f32, speed: f32, depth: f32) -> [f32; 4] {
@@ -122,10 +122,10 @@ impl Taps {
   fn mix_delay_network_and_reflections(
     &mut self,
     (left_delay_network_out, right_delay_network_out): (f32, f32),
-    early_reflections_output: Vec<f32>,
+    early_reflections: (f32, f32),
   ) -> (f32, f32) {
-    let left_out = (left_delay_network_out + early_reflections_output[0]) * 0.5;
-    let right_out = (right_delay_network_out + early_reflections_output[1]) * 0.5;
+    let left_out = (left_delay_network_out + early_reflections.0) * 0.5;
+    let right_out = (right_delay_network_out + early_reflections.1) * 0.5;
     (left_out, right_out)
   }
 }
