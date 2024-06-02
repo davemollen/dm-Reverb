@@ -52,7 +52,17 @@ impl SmoothParameters {
     let absorb = (absorb - 0.3333333).max(0.) * 1.5;
 
     (
-      reverse, predelay, size, speed, depth, absorb, diffuse, decay, tilt, shimmer, mix,
+      reverse,
+      predelay,
+      size,
+      speed,
+      depth,
+      absorb,
+      diffuse,
+      decay * 0.5,
+      tilt,
+      shimmer,
+      mix,
     )
   }
 }

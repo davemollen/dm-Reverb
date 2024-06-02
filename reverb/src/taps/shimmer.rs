@@ -40,9 +40,11 @@ impl Shimmer {
   }
 
   fn mix(&self, a: (f32, f32), b: (f32, f32), factor: f32) -> (f32, f32) {
+    let inverted_factor = 1. - factor;
+
     (
-      a.0 * (1. - factor) + b.0 * factor,
-      a.1 * (1. - factor) + b.1 * factor,
+      a.0 * inverted_factor + b.0 * factor,
+      a.1 * inverted_factor + b.1 * factor,
     )
   }
 

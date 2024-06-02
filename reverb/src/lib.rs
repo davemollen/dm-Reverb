@@ -1,4 +1,4 @@
-mod shared {
+pub mod shared {
   pub mod constants;
   pub mod delay_line;
   pub mod float_ext;
@@ -15,10 +15,8 @@ use crate::shared::{
   delay_line::{DelayLine, Interpolation},
   float_ext::FloatExt,
 };
-use {
-  mix::Mix, reverse::Reverse, smooth_parameters::SmoothParameters, taps::Taps,
-  tilt_filter::TiltFilter,
-};
+pub use taps::Taps;
+use {mix::Mix, reverse::Reverse, smooth_parameters::SmoothParameters, tilt_filter::TiltFilter};
 
 const TWELVE_DB: f32 = 3.981072;
 const TWENTY_FOUR_DB: f32 = 15.848932;

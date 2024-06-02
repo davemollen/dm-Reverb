@@ -20,3 +20,7 @@ flamegraph = "0.3"
 [[bench]]
 name = "reverb_bench"
 harness = false
+
+[[bench]]
+name = "taps_bench"
+harness = false
