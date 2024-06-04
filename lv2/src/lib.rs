@@ -51,7 +51,7 @@ impl Plugin for DmReverb {
     let depth = *ports.depth * 0.01;
     let absorb = *ports.absorb * 0.01;
     let decay = *ports.decay * 0.01;
-    let tilt = *ports.tilt * 0.01;
+    let tilt = (*ports.tilt * 0.005 + 0.5).max(0.0001);
     let shimmer = *ports.shimmer * 0.01;
     let mix = *ports.mix * 0.01;
 

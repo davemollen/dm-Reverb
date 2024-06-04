@@ -1,99 +1,85 @@
 mod biquad_filter;
 use biquad_filter::BiquadFilter;
-use std::f32::consts::TAU;
+mod bilinear_transform;
+use bilinear_transform::BilinearTransform;
+
+use crate::shared::float_ext::FloatExt;
 
 pub struct TiltFilter {
-  double_sr: f32,
-  biquad_filter_left: BiquadFilter,
-  biquad_filter_right: BiquadFilter,
+  bilinear_transform: BilinearTransform,
+  biquad_filter: BiquadFilter,
 }
 
 impl TiltFilter {
+  const C1: f32 = 5.6e-9;
+  const C2: f32 = 5.6e-9;
+  const R1: f32 = 2250.;
+  const R2: f32 = 2250.;
+  const RF1: f32 = 47000.;
+  const RF2: f32 = 47000.;
+  const R_TILT: f32 = 140000.;
+
   pub fn new(sample_rate: f32) -> Self {
     Self {
-      double_sr: sample_rate * 2.,
-      biquad_filter_left: BiquadFilter::new(),
-      biquad_filter_right: BiquadFilter::new(),
+      bilinear_transform: BilinearTransform::new(sample_rate),
+      biquad_filter: BiquadFilter::new(),
     }
   }
 
-  pub fn process(
-    &mut self,
-    input: (f32, f32),
-    low_frequency: f32,
-    high_frequency: f32,
-    low_gain: f32,
-    high_gain: f32,
-    tilt: f32,
-  ) -> (f32, f32) {
-    if tilt == 0. {
+  pub fn process(&mut self, input: (f32, f32), tilt: f32) -> (f32, f32) {
+    if tilt.is_equal_to(0.5) {
       input
     } else {
-      let s_domain_coefficients =
-        self.get_s_domain_coefficients(low_frequency, high_frequency, low_gain, high_gain, tilt);
-      let z_domain_coefficients = self.apply_bilinear_transform(s_domain_coefficients);
-      self.get_biquad_filters_output(input, z_domain_coefficients)
+      let s_domain_coefficients = self.get_s_domain_coefficients(tilt);
+      let z_domain_coefficients = self.bilinear_transform.process(s_domain_coefficients);
+      self.biquad_filter.process(input, z_domain_coefficients)
     }
   }
 
-  fn get_s_domain_coefficients(
-    &self,
-    low_frequency: f32,
-    high_frequency: f32,
-    low_gain: f32,
-    high_gain: f32,
-    tilt: f32,
-  ) -> (f32, f32, f32, f32, f32, f32) {
-    let squared_double_sr = self.double_sr * self.double_sr;
-    let normalized_tilt = tilt * 0.5 + 0.5;
+  fn get_s_domain_coefficients(&self, tilt: f32) -> ([f32; 3], [f32; 3]) {
+    let r_tilt_a = Self::R_TILT * tilt;
+    let r_tilt_b = Self::R_TILT * (1. - tilt);
 
-    let low_radians = low_frequency * TAU;
-    let low_range = low_radians * low_gain - low_radians;
-    let low_a = low_range * normalized_tilt + low_radians;
-    let low_b = low_range * (1. - normalized_tilt) + low_radians;
+    let c1c2 = Self::C1 * Self::C2;
+    let c1c2r1 = c1c2 * Self::R1;
+    let c1c2r1r2 = c1c2r1 * Self::R2;
+    let c1c2r2 = c1c2 * Self::R2;
+    let c1c2r2rf2 = c1c2r2 * Self::RF2;
+    let c2r2 = Self::C2 * Self::R2;
+    let c1r1 = Self::C1 * Self::R1;
+    let c1rf2 = Self::C1 * Self::RF2;
+    let c1c2rf1rf2 = c1c2 * Self::RF1 * Self::RF2;
+    let c2rf1 = Self::C2 * Self::RF1;
 
-    let high_radians = high_frequency * TAU;
-    let high_offset = 1. / high_gain * high_radians;
-    let high_range = high_radians - high_offset;
-    let high_a = high_gain.powf(tilt);
-    let high_b = high_range * normalized_tilt + high_offset;
+    let b0 = -c1c2r2rf2 * Self::RF1
+      + -c1c2r2rf2 * r_tilt_b
+      + -c1c2r1r2 * r_tilt_b
+      + -c1c2r2rf2 * Self::R1
+      + -c1c2rf1rf2 * r_tilt_a
+      + -c1c2r2rf2 * r_tilt_a;
+    let b1 = -c1rf2 * Self::RF1
+      + -c1rf2 * r_tilt_b
+      + -c2r2 * r_tilt_b
+      + -c2r2 * Self::RF2
+      + -c1r1 * r_tilt_b
+      + -c1r1 * Self::RF2
+      + -c1rf2 * r_tilt_a;
+    let b2 = -r_tilt_b + -Self::RF2;
+    let a0 = c1c2rf1rf2 * r_tilt_b
+      + c1c2r1 * Self::RF1 * r_tilt_b
+      + c1c2rf1rf2 * Self::R1
+      + c1c2r1r2 * Self::RF1
+      + c1c2r1 * Self::RF1 * r_tilt_a
+      + c1c2r1r2 * r_tilt_a;
+    let a1 = c2rf1 * r_tilt_b
+      + c2rf1 * Self::RF2
+      + c2r2 * Self::RF1
+      + c1r1 * Self::RF1
+      + c2rf1 * r_tilt_a
+      + c2r2 * r_tilt_a
+      + c1r1 * r_tilt_a;
+    let a2 = Self::RF1 + r_tilt_a;
 
-    let b0 = high_a * squared_double_sr;
-    let b1 = low_b * high_a + high_b * self.double_sr;
-    let b2 = low_b * high_b;
-    let a0 = squared_double_sr;
-    let a1 = (low_a + high_b) * self.double_sr;
-    let a2 = low_a * high_b;
-
-    (a0, a1, a2, b0, b1, b2)
-  }
-
-  fn apply_bilinear_transform(
-    &self,
-    params: (f32, f32, f32, f32, f32, f32),
-  ) -> (f32, f32, f32, f32, f32) {
-    let (a0, a1, a2, b0, b1, b2) = params;
-    let bzt_b0 = a0 + a1 + a2;
-    let bzt_a0 = (b0 + b1 + b2) / bzt_b0;
-    let bzt_a1 = (2. * b2 - 2. * b0) / bzt_b0;
-    let bzt_a2 = (b2 - b1 + b0) / bzt_b0;
-    let bzt_b1 = (2. * a2 - 2. * a0) / bzt_b0;
-    let bzt_b2 = (a2 - a1 + a0) / bzt_b0;
-
-    (bzt_a0, bzt_a1, bzt_a2, bzt_b1, bzt_b2)
-  }
-
-  fn get_biquad_filters_output(
-    &mut self,
-    input: (f32, f32),
-    biquad_params: (f32, f32, f32, f32, f32),
-  ) -> (f32, f32) {
-    let (a0, a1, a2, b1, b2) = biquad_params;
-    (
-      self.biquad_filter_left.process(input.0, a0, a1, a2, b1, b2),
-      self
-        .biquad_filter_right
-        .process(input.1, a0, a1, a2, b1, b2),
-    )
+    ([b0, b1, b2], [a0, a1, a2])
   }
 }

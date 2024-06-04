@@ -18,9 +18,6 @@ use crate::shared::{
 pub use taps::Taps;
 use {mix::Mix, reverse::Reverse, smooth_parameters::SmoothParameters, tilt_filter::TiltFilter};
 
-const TWELVE_DB: f32 = 3.981072;
-const TWENTY_FOUR_DB: f32 = 15.848932;
-
 pub struct Reverb {
   predelay_tap: DelayLine,
   reverse: Reverse,
@@ -97,9 +94,7 @@ impl Reverb {
     if tilt == 0. {
       input
     } else {
-      self
-        .tilt_filter
-        .process(input, 520., 4000., TWELVE_DB, TWENTY_FOUR_DB, tilt)
+      self.tilt_filter.process(input, tilt)
     }
   }
 }

@@ -61,7 +61,7 @@ impl Plugin for DmReverb {
     let depth = self.params.depth.get_value();
     let absorb = self.params.absorb.get_value();
     let decay = self.params.decay.get_value();
-    let tilt = self.params.tilt.get_value();
+    let tilt = self.params.tilt.get_normalized_value().max(0.0001);
     let shimmer = self.params.shimmer.get_value();
     let mix = self.params.mix.get_value();
 
