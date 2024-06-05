@@ -23,14 +23,14 @@ impl Shimmer {
     }
   }
 
-  pub fn process(&mut self, dry: (f32, f32), wet: (f32, f32), mix: f32) -> (f32, f32) {
+  pub fn process(&mut self, dry: f32, wet: (f32, f32), mix: f32) -> (f32, f32) {
     let out = if mix > 0. {
       let grains_out = self.apply_shimmer();
       self.mix(dry, grains_out, mix)
     } else {
-      dry
+      (dry, dry)
     };
-    self.write(wet);
+    self.write(((dry + wet.0) * 0.5, (dry + wet.1) * 0.5));
     out
   }
 
@@ -39,13 +39,10 @@ impl Shimmer {
     self.delay_lines[1].write(input.1);
   }
 
-  fn mix(&self, a: (f32, f32), b: (f32, f32), factor: f32) -> (f32, f32) {
-    let inverted_factor = 1. - factor;
+  fn mix(&self, a: f32, b: (f32, f32), factor: f32) -> (f32, f32) {
+    let a = a * (1. - factor);
 
-    (
-      a.0 * inverted_factor + b.0 * factor,
-      a.1 * inverted_factor + b.1 * factor,
-    )
+    (a + b.0 * factor, a + b.1 * factor)
   }
 
   fn apply_shimmer(&mut self) -> (f32, f32) {

@@ -57,10 +57,7 @@ impl Taps {
     self
       .saturation_activator
       .set_amplitude(delay_network_channels);
-
-    let shimmer = self
-      .shimmer
-      .process((input, input), delay_network_channels, shimmer);
+    let shimmer = self.shimmer.process(input, delay_network_channels, shimmer);
     let feedback_matrix_outputs = Self::apply_matrix(delay_network_outputs);
     self.process_and_write_taps(shimmer, feedback_matrix_outputs, diffuse, absorb, decay);
 
