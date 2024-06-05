@@ -8,13 +8,16 @@ sample_rate = 44100  # in Hz
 
 # Change the tilt value to see the difference in the frequency response
 # Keep it between 0 and 1
-tilt = 0.0001
+tilt = 0.
 
 def get_s_domain_coefficients(tilt):
-  #   ( ( - C1 * C2 * R2 * RF1 * RF2 ) + ( - c1c2r2rf2 * RTilt*(1-a) ) + ( - C1 * C2 * R1 * R2 * RTilt*(1-a) ) + ( - C1 * C2 * R1 * R2 * RF2 ) + ( - C1 * C2 * RF1 * RF2 * RTilt*a ) + ( - c1c2r2rf2 * RTilt*a ) ) * s^2 + ( ( - C1 * RF1 * RF2 ) + ( - C1 * RF2 * RTilt*(1-a) ) + ( - C2 * R2 * RTilt*(1-a) ) + ( - C2 * R2 * RF2 ) + ( - C1 * R1 * RTilt*(1-a) ) + ( - C1 * R1 * RF2 ) + ( - C1 * RF2 * RTilt*a ) ) * s + ( ( - RTilt*(1-a) ) + ( - RF2 ) )
+  # The following transfer function was derived with QsapecNG:
+  # ( ( - C1 * C2 * R2 * RF1 * RF2 ) + ( - C1 * C2 * R2 * RF2 * RTilt*(1-a) ) + ( - C1 * C2 * R1 * R2 * RTilt*(1-a) ) + ( - C1 * C2 * R1 * R2 * RF2 ) + ( - C1 * C2 * RF1 * RF2 * RTilt*a ) + ( - C1 * C2 * R2 * RF2 * RTilt*a ) ) * s^2 + ( ( - C1 * RF1 * RF2 ) + ( - C1 * RF2 * RTilt*(1-a) ) + ( - C2 * R2 * RTilt*(1-a) ) + ( - C2 * R2 * RF2 ) + ( - C1 * R1 * RTilt*(1-a) ) + ( - C1 * R1 * RF2 ) + ( - C1 * RF2 * RTilt*a ) ) * s + ( ( - RTilt*(1-a) ) + ( - RF2 ) )
   # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   # ( C1 * C2 * RF1 * RF2 * RTilt*(1-a) + C1 * C2 * R1 * RF1 * RTilt*(1-a) + C1 * C2 * R1 * RF1 * RF2 + C1 * C2 * R1 * R2 * RF1 + C1 * C2 * R1 * RF1 * RTilt*a + C1 * C2 * R1 * R2 * RTilt*a ) * s^2 + ( C2 * RF1 * RTilt*(1-a) + C2 * RF1 * RF2 + C2 * R2 * RF1 + C1 * R1 * RF1 + C2 * RF1 * RTilt*a + C2 * R2 * RTilt*a + C1 * R1 * RTilt*a ) * s + ( RF1 + RTilt*a )
-
+  
+  # This function implements this transfer function, but with less repeated calculations.
+  
   c1 = 5.6e-9
   c2 = 5.6e-9
   r1 = 2250

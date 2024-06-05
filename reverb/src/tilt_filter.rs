@@ -3,8 +3,6 @@ use biquad_filter::BiquadFilter;
 mod bilinear_transform;
 use bilinear_transform::BilinearTransform;
 
-use crate::shared::float_ext::FloatExt;
-
 pub struct TiltFilter {
   bilinear_transform: BilinearTransform,
   biquad_filter: BiquadFilter,
@@ -27,13 +25,9 @@ impl TiltFilter {
   }
 
   pub fn process(&mut self, input: (f32, f32), tilt: f32) -> (f32, f32) {
-    if tilt == 0.5 {
-      input
-    } else {
-      let s_domain_coefficients = self.get_s_domain_coefficients(tilt);
-      let z_domain_coefficients = self.bilinear_transform.process(s_domain_coefficients);
-      self.biquad_filter.process(input, z_domain_coefficients)
-    }
+    let s_domain_coefficients = self.get_s_domain_coefficients(tilt);
+    let z_domain_coefficients = self.bilinear_transform.process(s_domain_coefficients);
+    self.biquad_filter.process(input, z_domain_coefficients)
   }
 
   fn get_s_domain_coefficients(&self, tilt: f32) -> ([f32; 3], [f32; 3]) {

@@ -30,10 +30,10 @@ impl DmReverb {
       self.params.predelay.value(),
       self.params.size.value(),
       self.params.speed.value(),
-      depth * depth * depth.signum() * MAX_DEPTH,
+      depth * depth.abs() * MAX_DEPTH,
       self.params.absorb.value(),
       self.params.decay.value() * 0.5,
-      (self.params.tilt.value() * 0.5 + 0.5).max(0.0001),
+      self.params.tilt.value() * 0.5 + 0.5,
       shimmer * shimmer,
       self.params.mix.value(),
     )

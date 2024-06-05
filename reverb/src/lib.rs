@@ -86,7 +86,7 @@ impl Reverb {
       shimmer,
     );
 
-    let tilt_filter_output = self.apply_tilt_filter(taps_output, tilt);
+    let tilt_filter_output = self.tilt_filter.process(taps_output, tilt);
     Mix::process(input, tilt_filter_output, mix)
   }
 
@@ -103,13 +103,5 @@ impl Reverb {
     };
     self.predelay_tap.write((input.0 + input.1) * 0.5);
     predelay_output
-  }
-
-  fn apply_tilt_filter(&mut self, input: (f32, f32), tilt: f32) -> (f32, f32) {
-    if tilt == 0. {
-      input
-    } else {
-      self.tilt_filter.process(input, tilt)
-    }
   }
 }
