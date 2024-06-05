@@ -3,7 +3,7 @@ extern crate vst;
 mod editor;
 use editor::ReverbEditor;
 mod reverb_parameters;
-use reverb::Reverb;
+use reverb::{shared::constants::MAX_DEPTH, Reverb};
 use reverb_parameters::{Params, ReverbParameters};
 use std::sync::Arc;
 use vst::{
@@ -17,6 +17,31 @@ struct DmReverb {
   params: Arc<ReverbParameters>,
   reverb: Reverb,
   editor: Option<ReverbEditor>,
+  is_active: bool,
+}
+
+impl DmReverb {
+  fn get_params(&self) -> (f32, f32, f32, f32, f32, f32, f32, f32, f32, f32) {
+    let depth = self.params.depth.get_value();
+    let shimmer = self.params.shimmer.get_value();
+
+    (
+      if self.params.reverse.get_value() {
+        1.
+      } else {
+        0.
+      },
+      self.params.predelay.get_value(),
+      self.params.size.get_value(),
+      self.params.speed.get_value(),
+      depth * depth * depth.signum() * MAX_DEPTH,
+      self.params.absorb.get_value(),
+      self.params.decay.get_value() * 0.5,
+      (self.params.tilt.get_value() * 0.5 + 0.5).max(0.0001),
+      shimmer * shimmer,
+      self.params.mix.get_value(),
+    )
+  }
 }
 
 impl Plugin for DmReverb {
@@ -31,6 +56,7 @@ impl Plugin for DmReverb {
         is_open: false,
         host: Some(host),
       }),
+      is_active: false,
     }
   }
 
@@ -54,16 +80,15 @@ impl Plugin for DmReverb {
   }
 
   fn process(&mut self, buffer: &mut AudioBuffer<f32>) {
-    let reverse = self.params.reverse.get_value();
-    let predelay = self.params.predelay.get_value();
-    let size = self.params.size.get_value();
-    let speed = self.params.speed.get_value();
-    let depth = self.params.depth.get_value();
-    let absorb = self.params.absorb.get_value();
-    let decay = self.params.decay.get_value();
-    let tilt = self.params.tilt.get_normalized_value().max(0.0001);
-    let shimmer = self.params.shimmer.get_value();
-    let mix = self.params.mix.get_value();
+    let (reverse, predelay, size, speed, depth, absorb, decay, tilt, shimmer, mix) =
+      self.get_params();
+
+    if !self.is_active {
+      self
+        .reverb
+        .initialize_params(reverse, predelay, size, depth, absorb, tilt, shimmer, mix);
+      self.is_active = true;
+    }
 
     let (input_channels, mut output_channels) = buffer.split();
     let zipped_input_channels = input_channels.get(0).iter().zip(input_channels.get(1));

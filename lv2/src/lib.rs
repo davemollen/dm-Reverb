@@ -1,7 +1,7 @@
 extern crate lv2;
 extern crate reverb;
 use lv2::prelude::*;
-use reverb::Reverb;
+use reverb::{shared::constants::MAX_DEPTH, Reverb};
 
 #[derive(PortCollection)]
 struct Ports {
@@ -24,6 +24,27 @@ struct Ports {
 #[uri("https://github.com/davemollen/dm-Reverb")]
 struct DmReverb {
   reverb: Reverb,
+  is_active: bool,
+}
+
+impl DmReverb {
+  fn get_params(&self, ports: &mut Ports) -> (f32, f32, f32, f32, f32, f32, f32, f32, f32, f32) {
+    let depth = *ports.depth * 0.01;
+    let shimmer = *ports.shimmer * 0.01;
+
+    (
+      *ports.reverse,
+      *ports.predelay,
+      *ports.size,
+      *ports.speed,
+      depth * depth * depth.signum() * MAX_DEPTH,
+      *ports.absorb * 0.01,
+      *ports.decay * 0.005,
+      (*ports.tilt * 0.5 + 0.5).max(0.0001),
+      shimmer * shimmer,
+      *ports.mix * 0.01,
+    )
+  }
 }
 
 impl Plugin for DmReverb {
@@ -38,22 +59,22 @@ impl Plugin for DmReverb {
   fn new(_plugin_info: &PluginInfo, _features: &mut ()) -> Option<Self> {
     Some(Self {
       reverb: Reverb::new(_plugin_info.sample_rate() as f32),
+      is_active: false,
     })
   }
 
   // Process a chunk of audio. The audio ports are dereferenced to slices, which the plugin
   // iterates over.
   fn run(&mut self, ports: &mut Ports, _features: &mut (), _sample_count: u32) {
-    let size = *ports.size;
-    let predelay = *ports.predelay;
-    let reverse = *ports.reverse == 1.;
-    let speed = *ports.speed;
-    let depth = *ports.depth * 0.01;
-    let absorb = *ports.absorb * 0.01;
-    let decay = *ports.decay * 0.01;
-    let tilt = (*ports.tilt * 0.005 + 0.5).max(0.0001);
-    let shimmer = *ports.shimmer * 0.01;
-    let mix = *ports.mix * 0.01;
+    let (reverse, predelay, size, speed, depth, absorb, decay, tilt, shimmer, mix) =
+      self.get_params(ports);
+
+    if !self.is_active {
+      self
+        .reverb
+        .initialize_params(reverse, predelay, size, depth, absorb, tilt, shimmer, mix);
+      self.is_active = true;
+    }
 
     let input_channels = ports.input_left.iter().zip(ports.input_right.iter());
     let output_channels = ports

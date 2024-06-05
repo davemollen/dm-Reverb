@@ -27,7 +27,7 @@ impl TiltFilter {
   }
 
   pub fn process(&mut self, input: (f32, f32), tilt: f32) -> (f32, f32) {
-    if tilt.is_equal_to(0.5) {
+    if tilt == 0.5 {
       input
     } else {
       let s_domain_coefficients = self.get_s_domain_coefficients(tilt);

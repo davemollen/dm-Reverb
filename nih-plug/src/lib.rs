@@ -1,5 +1,5 @@
 use nih_plug::prelude::*;
-use reverb::Reverb;
+use reverb::{shared::constants::MAX_DEPTH, Reverb};
 mod reverb_parameters;
 use reverb_parameters::ReverbParameters;
 use std::sync::Arc;
@@ -17,6 +17,26 @@ impl Default for DmReverb {
       params: params.clone(),
       reverb: Reverb::new(44100.),
     }
+  }
+}
+
+impl DmReverb {
+  fn get_params(&self) -> (f32, f32, f32, f32, f32, f32, f32, f32, f32, f32) {
+    let depth = self.params.depth.value();
+    let shimmer = self.params.shimmer.value();
+
+    (
+      if self.params.reverse.value() { 1. } else { 0. },
+      self.params.predelay.value(),
+      self.params.size.value(),
+      self.params.speed.value(),
+      depth * depth * depth.signum() * MAX_DEPTH,
+      self.params.absorb.value(),
+      self.params.decay.value() * 0.5,
+      (self.params.tilt.value() * 0.5 + 0.5).max(0.0001),
+      shimmer * shimmer,
+      self.params.mix.value(),
+    )
   }
 }
 
@@ -56,6 +76,11 @@ impl Plugin for DmReverb {
     _context: &mut impl InitContext<Self>,
   ) -> bool {
     self.reverb = Reverb::new(buffer_config.sample_rate);
+    let (reverse, predelay, size, _speed, depth, absorb, _decay, tilt, shimmer, mix) =
+      self.get_params();
+    self
+      .reverb
+      .initialize_params(reverse, predelay, size, depth, absorb, tilt, shimmer, mix);
     true
   }
 
@@ -65,16 +90,8 @@ impl Plugin for DmReverb {
     _aux: &mut AuxiliaryBuffers,
     _context: &mut impl ProcessContext<Self>,
   ) -> ProcessStatus {
-    let reverse = self.params.reverse.value();
-    let predelay = self.params.predelay.value();
-    let size = self.params.size.value();
-    let speed = self.params.speed.value();
-    let depth = self.params.depth.value();
-    let absorb = self.params.absorb.value();
-    let decay = self.params.decay.value();
-    let tilt = (self.params.tilt.value() * 0.5 + 0.5).max(0.0001);
-    let shimmer = self.params.shimmer.value();
-    let mix = self.params.mix.value();
+    let (reverse, predelay, size, speed, depth, absorb, decay, tilt, shimmer, mix) =
+      self.get_params();
 
     buffer.iter_samples().for_each(|mut channel_samples| {
       let channel_iterator = &mut channel_samples.iter_mut();

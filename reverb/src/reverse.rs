@@ -37,10 +37,10 @@ impl Reverse {
   fn reverse_delay(&mut self, delay_line: &mut DelayLine, time: f32) -> f32 {
     let freq = 1000. / time;
     let phasor_a = self.phasor.process(freq) * 2.;
-    let phasor_b = (phasor_a + 1.) % 2.;
+    let phasor_b = Self::wrap(phasor_a + 1.);
 
     let xfade_factor = time / MIN_PREDELAY;
-    let xfade_offset = 1. / xfade_factor + 1.;
+    let xfade_offset = xfade_factor.recip() + 1.;
     let ramp_up = (phasor_a * xfade_factor).min(1.);
     let ramp_down = ((xfade_offset - phasor_a) * xfade_factor).clamp(0., 1.);
     let xfade_a = ramp_up * ramp_down;
@@ -49,5 +49,13 @@ impl Reverse {
     let reverse_delay_a = self.read_delay_line(delay_line, phasor_a, time, xfade_a);
     let reverse_delay_b = self.read_delay_line(delay_line, phasor_b, time, xfade_b);
     reverse_delay_a + reverse_delay_b
+  }
+
+  fn wrap(x: f32) -> f32 {
+    if x >= 2. {
+      x - 2.
+    } else {
+      x
+    }
   }
 }
