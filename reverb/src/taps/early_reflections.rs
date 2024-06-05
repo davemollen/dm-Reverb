@@ -5,8 +5,8 @@ use crate::shared::{
 };
 
 const LAST_EARLY_REFLECTION_GAIN: f32 = 0.501187;
-const MINUS_THREE_DB: f32 = 0.707946;
-const MINUS_FIFTEEN_DB: f32 = 0.177828;
+const MINUS_NINE_DB: f32 = 0.707946;
+const MINUS_TWENTY_ONE_DB: f32 = 0.089125;
 
 pub struct EarlyReflections {
   reflections: [[f32; 6]; 2],
@@ -32,7 +32,7 @@ impl EarlyReflections {
   }
 
   pub fn process(&mut self, size: f32, taps: &mut [Tap; 4]) -> (f32, f32) {
-    let gain = size.scale(MIN_SIZE, MAX_SIZE, MINUS_THREE_DB, MINUS_FIFTEEN_DB);
+    let gain = size.scale(MIN_SIZE, MAX_SIZE, MINUS_NINE_DB, MINUS_TWENTY_ONE_DB);
 
     let reflections = (
       taps[0].early_reflection_read(size, self.reflections[0][0]) * self.attenuations[0]

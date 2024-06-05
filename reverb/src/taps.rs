@@ -124,8 +124,8 @@ impl Taps {
     (left_delay_network_out, right_delay_network_out): (f32, f32),
     early_reflections: (f32, f32),
   ) -> (f32, f32) {
-    let left_out = left_delay_network_out + early_reflections.0 * 0.5;
-    let right_out = right_delay_network_out + early_reflections.1 * 0.5;
+    let left_out = left_delay_network_out + early_reflections.0;
+    let right_out = right_delay_network_out + early_reflections.1;
     (left_out, right_out)
   }
 }
