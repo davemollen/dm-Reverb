@@ -116,7 +116,7 @@ impl Taps {
   }
 
   fn retrieve_channels_from_delay_network(inputs: [f32; 4]) -> (f32, f32) {
-    (inputs[0] + inputs[2], inputs[1] + inputs[3])
+    ((inputs[0] + inputs[2]) * 0.5, (inputs[1] + inputs[3]) * 0.5)
   }
 
   fn mix_delay_network_and_reflections(
@@ -124,8 +124,8 @@ impl Taps {
     (left_delay_network_out, right_delay_network_out): (f32, f32),
     early_reflections: (f32, f32),
   ) -> (f32, f32) {
-    let left_out = (left_delay_network_out + early_reflections.0) * 0.5;
-    let right_out = (right_delay_network_out + early_reflections.1) * 0.5;
+    let left_out = left_delay_network_out + early_reflections.0 * 0.5;
+    let right_out = right_delay_network_out + early_reflections.1 * 0.5;
     (left_out, right_out)
   }
 }

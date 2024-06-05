@@ -89,10 +89,6 @@ impl Tap {
     self.dc_block.process(saturation_out * decay)
   }
 
-  pub fn shimmer_read(&mut self, time: f32) -> f32 {
-    self.delay_line.read(time, Interpolation::Linear)
-  }
-
   fn vibrato_read(&mut self, size: f32, lfo_phase: f32, lfo_depth: f32) -> f32 {
     let lfo_phase_input = (lfo_phase + self.lfo_phase_offset) % 1. * TAU;
     let lfo = lfo_phase_input.fast_sin() * lfo_depth.abs();
