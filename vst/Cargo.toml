@@ -8,7 +8,7 @@ edition = "2021"
 
 [dependencies]
 vst = "0.3.0"
-vizia = { git = "https://github.com/robbert-vdh/vizia.git", tag = "patched-2023-12-30", default_features = false, features = ["baseview", "clipboard", "x11"] }
+vizia = { git = "https://github.com/robbert-vdh/vizia.git", default_features = false, features = ["baseview", "clipboard", "x11"] }
 reverb = { path = "../reverb" }
 
 [lib]
