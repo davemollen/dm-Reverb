@@ -40,7 +40,7 @@ impl DmReverb {
       depth * depth.abs() * MAX_DEPTH,
       *ports.absorb * 0.01,
       *ports.decay * 0.005,
-      *ports.tilt * 0.5 + 0.5,
+      *ports.tilt * 0.005 + 0.5,
       shimmer * shimmer,
       *ports.mix * 0.01,
     )
