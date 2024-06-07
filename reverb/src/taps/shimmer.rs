@@ -1,7 +1,7 @@
 use crate::shared::{
-  delay_line::{DelayLine, Interpolation},
   float_ext::FloatExt,
   phasor::Phasor,
+  stereo_delay_line::{Interpolation, StereoDelayLine},
 };
 use std::f32::consts::PI;
 
@@ -9,7 +9,7 @@ const FREQUENCY: f32 = -5.;
 const WINDOW_SIZE: f32 = 200.;
 
 pub struct Shimmer {
-  delay_lines: Vec<DelayLine>,
+  delay_line: StereoDelayLine,
   phasor: Phasor,
 }
 
@@ -18,31 +18,32 @@ impl Shimmer {
     let delay_length = (sample_rate * WINDOW_SIZE / 1000.) as usize;
 
     Self {
-      delay_lines: vec![DelayLine::new(delay_length, sample_rate); 2],
+      delay_line: StereoDelayLine::new(delay_length, sample_rate),
       phasor: Phasor::new(sample_rate),
     }
   }
 
-  pub fn process(&mut self, dry: f32, wet: (f32, f32), mix: f32) -> (f32, f32) {
+  pub fn process(&mut self, dry: (f32, f32), wet: (f32, f32), mix: f32) -> (f32, f32) {
     let out = if mix > 0. {
       let grains_out = self.apply_shimmer();
-      self.mix(dry, grains_out, mix)
+      Self::mix(dry, grains_out, mix)
     } else {
-      (dry, dry)
+      dry
     };
-    self.write(((dry + wet.0) * 0.5, (dry + wet.1) * 0.5));
+    self.write(((dry.0 + wet.0) * 0.5, (dry.1 + wet.1) * 0.5));
     out
   }
 
   fn write(&mut self, input: (f32, f32)) {
-    self.delay_lines[0].write(input.0);
-    self.delay_lines[1].write(input.1);
+    self.delay_line.write(input);
   }
 
-  fn mix(&self, a: f32, b: (f32, f32), factor: f32) -> (f32, f32) {
-    let a = a * (1. - factor);
-
-    (a + b.0 * factor, a + b.1 * factor)
+  fn mix(left: (f32, f32), right: (f32, f32), factor: f32) -> (f32, f32) {
+    let inverted_factor = 1. - factor;
+    (
+      left.0 * inverted_factor + right.0 * factor,
+      left.1 * inverted_factor + right.1 * factor,
+    )
   }
 
   fn apply_shimmer(&mut self) -> (f32, f32) {
@@ -58,10 +59,9 @@ impl Shimmer {
         let time = phase * WINDOW_SIZE;
         let window = (phase * PI).fast_sin();
         let window = window * window;
-        (
-          self.delay_lines[0].read(time, Interpolation::Linear) * window,
-          self.delay_lines[1].read(time, Interpolation::Linear) * window,
-        )
+
+        let delay_line_out = self.delay_line.read(time, Interpolation::Linear);
+        (delay_line_out.0 * window, delay_line_out.1 * window)
       })
       .fold((0., 0.), |result, item| {
         (result.0 + item.0, result.1 + item.1)

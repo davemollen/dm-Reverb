@@ -41,7 +41,7 @@ impl Taps {
 
   pub fn process(
     &mut self,
-    input: f32,
+    input: (f32, f32),
     size: f32,
     speed: f32,
     depth: f32,
