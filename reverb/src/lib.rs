@@ -1,3 +1,4 @@
+#![feature(portable_simd)]
 pub mod shared {
   pub mod constants;
   pub mod delay_line;

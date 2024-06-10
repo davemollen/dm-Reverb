@@ -1,6 +1,7 @@
-use super::tap::Tap;
+use super::DelayRead;
 use crate::shared::{
   constants::{MAX_SIZE, MIN_SIZE},
+  delay_line::DelayLine,
   float_ext::FloatExt,
 };
 
@@ -31,7 +32,7 @@ impl EarlyReflections {
     }
   }
 
-  pub fn process(&mut self, size: f32, taps: &mut [Tap; 4]) -> (f32, f32) {
+  pub fn process(&mut self, size: f32, taps: &mut [DelayLine; 4]) -> (f32, f32) {
     let gain = size.scale(MIN_SIZE, MAX_SIZE, MINUS_NINE_DB, MINUS_TWENTY_ONE_DB);
 
     let reflections = (

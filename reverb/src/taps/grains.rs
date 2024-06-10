@@ -10,6 +10,7 @@ use std::f32::consts::PI;
 const FADE_THRESHOLD_FACTOR: f32 = 0.05;
 const FADE_THRESHOLD: f32 = MAX_DEPTH * FADE_THRESHOLD_FACTOR;
 
+#[derive(Clone, Copy)]
 pub struct Grains {
   start_position: [f32; 2],
   delta: [Delta; 2],
