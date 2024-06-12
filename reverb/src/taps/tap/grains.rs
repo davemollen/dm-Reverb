@@ -10,31 +10,18 @@ use std::f32::consts::PI;
 const FADE_THRESHOLD_FACTOR: f32 = 0.05;
 const FADE_THRESHOLD: f32 = MAX_DEPTH * FADE_THRESHOLD_FACTOR;
 
-struct Grain {
-  start_position: f32,
-  delta: Delta,
-  phase_offset: f32,
-}
-
 pub struct Grains {
-  grains: [Grain; 2],
+  start_position: [f32; 2],
+  delta: [Delta; 2],
+  phase_offset: [f32; 2],
 }
 
 impl Grains {
   pub fn new() -> Self {
     Self {
-      grains: [
-        Grain {
-          start_position: 0.,
-          phase_offset: 0.,
-          delta: Delta::new(),
-        },
-        Grain {
-          start_position: 0.,
-          phase_offset: 0.5,
-          delta: Delta::new(),
-        },
-      ],
+      start_position: [0.; 2],
+      delta: [Delta::new(); 2],
+      phase_offset: [0., 0.5],
     }
   }
 
@@ -72,17 +59,15 @@ impl Grains {
     lfo_phase: f32,
     lfo_depth: f32,
   ) -> f32 {
-    self
-      .grains
-      .iter_mut()
-      .map(|grain| {
-        let phase = Self::wrap(lfo_phase + grain.phase_offset);
-        let trigger = grain.delta.process(phase) < 0.;
+    (0..2)
+      .map(|i| {
+        let phase = Self::wrap(lfo_phase + self.phase_offset[i]);
+        let trigger = self.delta[i].process(phase) < 0.;
         if trigger {
-          grain.start_position = fastrand::f32() * lfo_depth;
+          self.start_position[i] = fastrand::f32() * lfo_depth;
         };
         let window = (phase * PI).fast_sin();
-        let time = size * time_fraction + grain.start_position;
+        let time = size * time_fraction + self.start_position[i];
 
         delay_line.read(time, Interpolation::Linear) * window * window
       })
