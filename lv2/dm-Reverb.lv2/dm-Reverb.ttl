@@ -11,7 +11,7 @@
 	a lv2:Plugin , lv2:ReverbPlugin , mod:ReverbPlugin;
 	lv2:project <http://lv2plug.in/ns/lv2> ;
 	doap:name "dm-Reverb" ;
-	doap:license <http://opensource.org/licenses/isc> ;
+	doap:license "GPLv3" ;
 	doap:maintainer [
 		foaf:name "Dave Mollen" ;
 		foaf:homepage <https://github.com/davemollen/dm-Reverb> ;
