@@ -31,6 +31,7 @@ impl DmReverb {
   fn get_params(&self, ports: &mut Ports) -> (f32, f32, f32, f32, f32, f32, f32, f32, f32, f32) {
     let depth = *ports.depth * 0.01;
     let shimmer = *ports.shimmer * 0.01;
+    let tilt = *ports.tilt * 0.01;
 
     (
       *ports.reverse,
@@ -39,8 +40,8 @@ impl DmReverb {
       *ports.speed,
       depth * depth.abs() * MAX_DEPTH,
       *ports.absorb * 0.01,
-      *ports.decay * 0.005,
-      *ports.tilt * 0.005 + 0.5,
+      *ports.decay * 0.01,
+      tilt * tilt.abs() * 0.5 + 0.5,
       shimmer * shimmer,
       *ports.mix * 0.01,
     )

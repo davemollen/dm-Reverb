@@ -24,6 +24,7 @@ impl DmReverb {
   fn get_params(&self) -> (f32, f32, f32, f32, f32, f32, f32, f32, f32, f32) {
     let depth = self.params.depth.value();
     let shimmer = self.params.shimmer.value();
+    let tilt = self.params.tilt.value();
 
     (
       if self.params.reverse.value() { 1. } else { 0. },
@@ -32,8 +33,8 @@ impl DmReverb {
       self.params.speed.value(),
       depth * depth.abs() * MAX_DEPTH,
       self.params.absorb.value(),
-      self.params.decay.value() * 0.5,
-      self.params.tilt.value() * 0.5 + 0.5,
+      self.params.decay.value(),
+      tilt * tilt.abs() * 0.5 + 0.5,
       shimmer * shimmer,
       self.params.mix.value(),
     )

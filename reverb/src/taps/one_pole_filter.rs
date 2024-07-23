@@ -13,8 +13,8 @@ impl OnePoleFilter {
     }
   }
 
-  pub fn process(&mut self, input: f32x4, r: f32) -> f32x4 {
-    let b1 = f32x4::splat(r * self.t);
+  pub fn process(&mut self, input: f32x4, absorb: f32) -> f32x4 {
+    let b1 = f32x4::splat(absorb * self.t);
     let a0 = f32x4::splat(1.0) - b1;
 
     self.z = input * a0 + self.z * b1;

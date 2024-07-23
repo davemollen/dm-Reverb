@@ -4,8 +4,10 @@ mod delay_read;
 mod early_reflections;
 mod grains;
 mod one_pole_filter;
-mod saturation_activator;
+mod saturation;
 mod shimmer;
+
+use std::simd::num::SimdFloat;
 
 use crate::shared::{
   constants::{MAX_DEPTH, MAX_SIZE},
@@ -15,15 +17,8 @@ use crate::shared::{
 use {
   allpass_filter::AllpassFilter, dc_block::DcBlock, delay_read::DelayRead,
   early_reflections::EarlyReflections, grains::Grains, one_pole_filter::OnePoleFilter,
-  saturation_activator::SaturationActivator, shimmer::Shimmer, std::simd::f32x4,
+  saturation::Saturation, shimmer::Shimmer, std::simd::f32x4,
 };
-
-const MATRIX: [[f32; 4]; 4] = [
-  [1.0, -1.0, -1.0, 1.0],
-  [1.0, 1.0, -1.0, -1.0],
-  [1.0, -1.0, 1.0, -1.0],
-  [1.0, 1.0, 1.0, 1.0],
-];
 
 pub struct Taps {
   early_reflections: EarlyReflections,
@@ -36,11 +31,18 @@ pub struct Taps {
   absorbance: OnePoleFilter,
   diffusers: [AllpassFilter; 4],
   lfo_phasor: Phasor,
-  saturation_activator: SaturationActivator,
+  saturation: Saturation,
   shimmer: Shimmer,
 }
 
 impl Taps {
+  const MATRIX: [f32x4; 4] = [
+    f32x4::from_array([0.5, -0.5, -0.5, 0.5]),
+    f32x4::from_array([0.5, 0.5, -0.5, -0.5]),
+    f32x4::from_array([0.5, -0.5, 0.5, -0.5]),
+    f32x4::from_array([0.5, 0.5, 0.5, 0.5]),
+  ];
+
   pub fn new(sample_rate: f32) -> Self {
     let time_fractions = [
       0.34306569343065696,
@@ -76,7 +78,7 @@ impl Taps {
       lfo_phase_offsets: [0., 0.25, 0.5, 0.75],
       lfo_phasor: Phasor::new(sample_rate),
       shimmer: Shimmer::new(sample_rate),
-      saturation_activator: SaturationActivator::new(sample_rate),
+      saturation: Saturation::new(sample_rate),
     }
   }
 
@@ -93,16 +95,25 @@ impl Taps {
   ) -> (f32, f32) {
     let early_reflections = self.early_reflections.process(size, &mut self.delay_lines);
 
-    let delay_network_outputs = self.read_from_delay_network(size, speed, depth);
-    let delay_network_channels = Self::retrieve_channels_from_delay_network(delay_network_outputs);
-    self
-      .saturation_activator
-      .set_amplitude(delay_network_channels);
-    let shimmer = self.shimmer.process(input, delay_network_channels, shimmer);
-    let feedback_matrix_outputs = Self::apply_matrix(delay_network_outputs);
-    self.process_and_write_taps(shimmer, feedback_matrix_outputs, diffuse, absorb, decay);
+    let delay_network_taps = self.read_from_delay_network(size, speed, depth);
+    let delay_network_output = Self::retrieve_delay_network_output(delay_network_taps);
+    let (saturation_output, gain_compensation) = self
+      .saturation
+      .process(delay_network_output, f32x4::from_array(delay_network_taps));
+    let matrix_output = Self::apply_matrix(saturation_output);
+    let shimmer_output = self.shimmer.process(input, delay_network_output, shimmer);
+    let dc_block_output = self.dc_blocks.process(matrix_output);
+    let absorb_output = self.absorbance.process(
+      dc_block_output + f32x4::from_array([shimmer_output.0, shimmer_output.1, 0., 0.]),
+      absorb,
+    );
+    self.diffuse_and_write(absorb_output, diffuse, decay);
 
-    self.mix_delay_network_and_reflections(delay_network_channels, early_reflections)
+    self.mix_delay_network_and_reflections(
+      delay_network_output,
+      early_reflections,
+      gain_compensation,
+    )
   }
 
   fn read_from_delay_network(&mut self, size: f32, speed: f32, depth: f32) -> [f32; 4] {
@@ -144,53 +155,24 @@ impl Taps {
     ]
   }
 
-  fn apply_matrix(input: [f32; 4]) -> f32x4 {
-    [
-      Self::get_matrix_result(input, MATRIX[0]),
-      Self::get_matrix_result(input, MATRIX[1]),
-      Self::get_matrix_result(input, MATRIX[2]),
-      Self::get_matrix_result(input, MATRIX[3]),
-    ]
-    .into()
+  fn apply_matrix(input: f32x4) -> f32x4 {
+    f32x4::from_array([
+      (Self::MATRIX[0] * input).reduce_sum(),
+      (Self::MATRIX[1] * input).reduce_sum(),
+      (Self::MATRIX[2] * input).reduce_sum(),
+      (Self::MATRIX[3] * input).reduce_sum(),
+    ])
   }
 
-  fn get_matrix_result(inputs: [f32; 4], matrix: [f32; 4]) -> f32 {
-    inputs
-      .into_iter()
-      .zip(matrix)
-      .map(|(input, factor)| input * factor)
-      .sum()
+  fn diffuse_and_write(&mut self, input: f32x4, diffuse: f32, decay: f32) {
+    input.to_array().into_iter().enumerate().for_each(|(i, x)| {
+      let diffuse_output = self.diffusers[i].process(x, self.diffuser_times[i], diffuse);
+
+      self.delay_lines[i].write(diffuse_output * decay);
+    });
   }
 
-  fn process_and_write_taps(
-    &mut self,
-    input: (f32, f32),
-    feedback_matrix_outputs: f32x4,
-    diffuse: f32,
-    absorb: f32,
-    decay: f32,
-  ) {
-    let saturation_gain = self.saturation_activator.get_saturation_gain();
-
-    let saturated = Self::apply_saturation(feedback_matrix_outputs, saturation_gain);
-    let dc_blocked = self.dc_blocks.process(saturated);
-    let filtered = self.absorbance.process(
-      dc_blocked + f32x4::from_array([input.0, input.1, 0., 0.]),
-      absorb,
-    );
-
-    filtered
-      .to_array()
-      .into_iter()
-      .enumerate()
-      .for_each(|(i, x)| {
-        let diffuse_output = self.diffusers[i].process(x, self.diffuser_times[i], diffuse);
-
-        self.delay_lines[i].write(diffuse_output * decay);
-      });
-  }
-
-  fn retrieve_channels_from_delay_network(inputs: [f32; 4]) -> (f32, f32) {
+  fn retrieve_delay_network_output(inputs: [f32; 4]) -> (f32, f32) {
     ((inputs[0] + inputs[2]) * 0.5, (inputs[1] + inputs[3]) * 0.5)
   }
 
@@ -198,27 +180,10 @@ impl Taps {
     &mut self,
     (left_delay_network_out, right_delay_network_out): (f32, f32),
     early_reflections: (f32, f32),
+    gain_compensation: f32,
   ) -> (f32, f32) {
     let left_out = left_delay_network_out + early_reflections.0;
     let right_out = right_delay_network_out + early_reflections.1;
-    (left_out, right_out)
-  }
-
-  fn apply_saturation(input: f32x4, saturation_gain: f32) -> f32x4 {
-    let sat_gain = f32x4::splat(saturation_gain);
-    let clean_gain = f32x4::splat(1. - saturation_gain);
-    let clean_out = input * clean_gain;
-
-    if saturation_gain > 0. {
-      Self::fast_atan2(input) * sat_gain + clean_out
-    } else {
-      clean_out
-    }
-  }
-
-  fn fast_atan2(x: f32x4) -> f32x4 {
-    let n1 = f32x4::splat(0.97239411);
-    let n2 = f32x4::splat(-0.19194795);
-    (n1 + n2 * x * x) * x
+    (left_out * gain_compensation, right_out * gain_compensation)
   }
 }
