@@ -19,6 +19,7 @@ struct Ports {
   input_right: InputPort<Audio>,
   output_left: OutputPort<Audio>,
   output_right: OutputPort<Audio>,
+  envelope_cv: OutputPort<CV>,
 }
 
 #[uri("https://github.com/davemollen/dm-Reverb")]
@@ -81,11 +82,12 @@ impl Plugin for DmReverb {
     let output_channels = ports
       .output_left
       .iter_mut()
-      .zip(ports.output_right.iter_mut());
+      .zip(ports.output_right.iter_mut())
+      .zip(ports.envelope_cv.iter_mut());
 
     input_channels.zip(output_channels).for_each(
-      |((input_left, input_right), (output_left, output_right))| {
-        let reverb_output = self.reverb.process(
+      |((input_left, input_right), ((output_left, output_right), envelope_cv))| {
+        let ((reverb_left, reverb_right), average) = self.reverb.process(
           (*input_left, *input_right),
           reverse,
           predelay,
@@ -98,8 +100,9 @@ impl Plugin for DmReverb {
           shimmer,
           mix,
         );
-        *output_left = reverb_output.0;
-        *output_right = reverb_output.1;
+        *output_left = reverb_left;
+        *output_right = reverb_right;
+        *envelope_cv = average * 10.;
       },
     );
   }

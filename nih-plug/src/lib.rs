@@ -51,7 +51,15 @@ impl Plugin for DmReverb {
   const AUDIO_IO_LAYOUTS: &'static [AudioIOLayout] = &[AudioIOLayout {
     main_input_channels: NonZeroU32::new(2),
     main_output_channels: NonZeroU32::new(2),
-    ..AudioIOLayout::const_default()
+    aux_input_ports: &[],
+    aux_output_ports: &[new_nonzero_u32(1)],
+    names: PortNames {
+      layout: None,
+      main_input: None,
+      main_output: None,
+      aux_inputs: &[],
+      aux_outputs: &["Envelope"],
+    },
   }];
   const MIDI_INPUT: MidiConfig = MidiConfig::None;
   const SAMPLE_ACCURATE_AUTOMATION: bool = true;
@@ -88,18 +96,21 @@ impl Plugin for DmReverb {
   fn process(
     &mut self,
     buffer: &mut Buffer,
-    _aux: &mut AuxiliaryBuffers,
+    aux: &mut AuxiliaryBuffers,
     _context: &mut impl ProcessContext<Self>,
   ) -> ProcessStatus {
     let (reverse, predelay, size, speed, depth, absorb, decay, tilt, shimmer, mix) =
       self.get_params();
 
-    buffer.iter_samples().for_each(|mut channel_samples| {
+    for (mut channel_samples, mut aux_samples) in
+      buffer.iter_samples().zip(aux.outputs[0].iter_samples())
+    {
       let channel_iterator = &mut channel_samples.iter_mut();
       let left_channel = channel_iterator.next().unwrap();
       let right_channel = channel_iterator.next().unwrap();
+      let aux_channel = aux_samples.get_mut(0).unwrap();
 
-      let (reverb_left, reverb_right) = self.reverb.process(
+      let ((reverb_left, reverb_right), average) = self.reverb.process(
         (*left_channel, *right_channel),
         reverse,
         predelay,
@@ -115,7 +126,9 @@ impl Plugin for DmReverb {
 
       *left_channel = reverb_left;
       *right_channel = reverb_right;
-    });
+      *aux_channel = average;
+    }
+
     ProcessStatus::Normal
   }
 

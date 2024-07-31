@@ -135,4 +135,11 @@ A reverb effect written in Rust.
 		lv2:index 13 ;
 		lv2:symbol "out_right" ;
 		lv2:name "Out right"
+	] , [
+		a lv2:CVPort, lv2:OutputPort, mod:CVPort ;
+		lv2:index 14 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 10.0  ;
+		lv2:symbol "envelope_cv" ;
+		lv2:name "Envelope CV"
 	] .

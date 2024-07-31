@@ -28,10 +28,4 @@ However, you can find a build of the plugin for the MOD Dwarf at [./lv2/dm-Rever
 
 ## Other plugin formats
 
-- VST2:
-
-  Legacy code for a VST2 plugin is also in this repository. Since VST2 has been deprecated automated builds for VST2 have been excluded.
-
-- LV2
-
-  Code for a LV2 plugin is also in this repository. Automated builds are excluded for LV2 because the rust lv2 crate doesn't have GUI support. The LV2 plugin format is being used for the MOD devices plugin which in turn does have a GUI. Because MOD has it's own GUI layer on top of the LV2 plugin.
+Code for a LV2 plugin is also in this repository. Automated builds are excluded for LV2 because the rust lv2 crate doesn't have GUI support. The LV2 plugin format is being used for the MOD devices plugin which in turn does have a GUI. Because MOD has it's own GUI layer on top of the LV2 plugin.

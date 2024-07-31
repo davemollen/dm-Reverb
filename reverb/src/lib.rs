@@ -76,13 +76,13 @@ impl Reverb {
     tilt: f32,
     shimmer: f32,
     mix: f32,
-  ) -> (f32, f32) {
+  ) -> ((f32, f32), f32) {
     let (reverse, predelay, size, depth, absorb, diffuse, tilt, shimmer, mix) = self
       .smooth_parameters
       .process(reverse, predelay, size, depth, absorb, tilt, shimmer, mix);
 
     let predelay_output = self.get_predelay_output(input, predelay, reverse);
-    let taps_output = self.taps.process(
+    let (taps_output, average) = self.taps.process(
       predelay_output,
       size,
       speed,
@@ -94,7 +94,7 @@ impl Reverb {
     );
 
     let tilt_filter_output = self.tilt_filter.process(taps_output, tilt);
-    Mix::process(input, tilt_filter_output, mix)
+    (Mix::process(input, tilt_filter_output, mix), average)
   }
 
   fn get_predelay_output(&mut self, input: (f32, f32), time: f32, reverse: f32) -> (f32, f32) {
