@@ -30,12 +30,10 @@ impl Shimmer {
     } else {
       dry
     };
-    self.write(((dry.0 + wet.0) * 0.5, (dry.1 + wet.1) * 0.5));
+    self
+      .delay_line
+      .write(((dry.0 + wet.0) * 0.5, (dry.1 + wet.1) * 0.5));
     out
-  }
-
-  fn write(&mut self, input: (f32, f32)) {
-    self.delay_line.write(input);
   }
 
   fn mix(left: (f32, f32), right: (f32, f32), factor: f32) -> (f32, f32) {
