@@ -12,6 +12,7 @@ use {
   crate::shared::{
     constants::{MAX_DEPTH, MAX_SIZE},
     delay_line::DelayLine,
+    float_ext::FloatExt,
     phasor::Phasor,
   },
   allpass_filter::AllpassFilter,
@@ -85,7 +86,7 @@ impl Taps {
       lfo_phase_offsets: [0., 0.25, 0.5, 0.75],
       lfo_phasor: Phasor::new(sample_rate),
       shimmer: Shimmer::new(sample_rate),
-      average: Average::new((1000. / 44100. * sample_rate) as usize),
+      average: Average::new(21_f32.mstosamps(sample_rate) as usize),
       saturation: Saturation::new(sample_rate),
     }
   }
