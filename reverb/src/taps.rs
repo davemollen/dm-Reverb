@@ -1,4 +1,5 @@
 mod allpass_filter;
+mod average;
 mod dc_block;
 mod delay_read;
 mod early_reflections;
@@ -7,17 +8,22 @@ mod one_pole_filter;
 mod saturation;
 mod shimmer;
 
-use std::simd::num::SimdFloat;
-
-use crate::shared::{
-  constants::{MAX_DEPTH, MAX_SIZE},
-  delay_line::DelayLine,
-  phasor::Phasor,
-};
 use {
-  allpass_filter::AllpassFilter, dc_block::DcBlock, delay_read::DelayRead,
-  early_reflections::EarlyReflections, grains::Grains, one_pole_filter::OnePoleFilter,
-  saturation::Saturation, shimmer::Shimmer, std::simd::f32x4,
+  crate::shared::{
+    constants::{MAX_DEPTH, MAX_SIZE},
+    delay_line::DelayLine,
+    phasor::Phasor,
+  },
+  allpass_filter::AllpassFilter,
+  average::Average,
+  dc_block::DcBlock,
+  delay_read::DelayRead,
+  early_reflections::EarlyReflections,
+  grains::Grains,
+  one_pole_filter::OnePoleFilter,
+  saturation::Saturation,
+  shimmer::Shimmer,
+  std::simd::{f32x4, num::SimdFloat},
 };
 
 pub struct Taps {
@@ -31,6 +37,7 @@ pub struct Taps {
   absorbance: OnePoleFilter,
   diffusers: [AllpassFilter; 4],
   lfo_phasor: Phasor,
+  average: Average,
   saturation: Saturation,
   shimmer: Shimmer,
 }
@@ -78,6 +85,7 @@ impl Taps {
       lfo_phase_offsets: [0., 0.25, 0.5, 0.75],
       lfo_phasor: Phasor::new(sample_rate),
       shimmer: Shimmer::new(sample_rate),
+      average: Average::new((1000. / 44100. * sample_rate) as usize),
       saturation: Saturation::new(sample_rate),
     }
   }
@@ -97,9 +105,12 @@ impl Taps {
 
     let delay_network_taps = self.read_from_delay_network(size, speed, depth);
     let delay_network_output = Self::retrieve_delay_network_output(delay_network_taps);
+    let average = self
+      .average
+      .process(delay_network_output.0 + delay_network_output.1);
     let (saturation_output, gain_compensation) = self
       .saturation
-      .process(delay_network_output, f32x4::from_array(delay_network_taps));
+      .process(f32x4::from_array(delay_network_taps), average);
     let matrix_output = Self::apply_matrix(saturation_output);
     let shimmer_output = self.shimmer.process(input, delay_network_output, shimmer);
     let dc_block_output = self.dc_blocks.process(matrix_output);

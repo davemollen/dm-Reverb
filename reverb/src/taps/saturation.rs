@@ -1,27 +1,22 @@
-mod average;
 use {
   crate::shared::param_filter::ParamFilter,
-  average::Average,
   std::simd::{f32x4, num::SimdFloat},
 };
 
 const THRESHOLD: f32 = 0.075;
 
 pub struct Saturation {
-  average: Average,
   enabled: ParamFilter,
 }
 
 impl Saturation {
   pub fn new(sample_rate: f32) -> Self {
     Self {
-      average: Average::new((1000. / 44100. * sample_rate) as usize),
       enabled: ParamFilter::new(sample_rate, 5.),
     }
   }
 
-  pub fn process(&mut self, sidechain_input: (f32, f32), taps: f32x4) -> (f32x4, f32) {
-    let average = self.average.process(sidechain_input.0 + sidechain_input.1);
+  pub fn process(&mut self, taps: f32x4, average: f32) -> (f32x4, f32) {
     let saturation_gain = self
       .enabled
       .process(if average > THRESHOLD { 1. } else { 0. });
