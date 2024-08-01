@@ -12,7 +12,7 @@ pub struct Saturation {
 impl Saturation {
   pub fn new(sample_rate: f32) -> Self {
     Self {
-      enabled: ParamFilter::new(sample_rate, 5.),
+      enabled: ParamFilter::new(sample_rate, 15.),
     }
   }
 
