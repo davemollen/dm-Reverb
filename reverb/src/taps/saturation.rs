@@ -3,7 +3,7 @@ use {
   std::simd::{f32x4, num::SimdFloat},
 };
 
-const THRESHOLD: f32 = 0.075;
+const THRESHOLD: f32 = 0.3;
 
 pub struct Saturation {
   enabled: ParamFilter,

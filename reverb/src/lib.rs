@@ -54,13 +54,14 @@ impl Reverb {
     size: f32,
     depth: f32,
     absorb: f32,
+    decay: f32,
     tilt: f32,
     shimmer: f32,
     mix: f32,
   ) {
-    self
-      .smooth_parameters
-      .initialize(reverse, predelay, size, depth, absorb, tilt, shimmer, mix);
+    self.smooth_parameters.initialize(
+      reverse, predelay, size, depth, absorb, decay, tilt, shimmer, mix,
+    );
   }
 
   pub fn process(
@@ -77,9 +78,10 @@ impl Reverb {
     shimmer: f32,
     mix: f32,
   ) -> (f32, f32) {
-    let (reverse, predelay, size, depth, absorb, diffuse, tilt, shimmer, mix) = self
-      .smooth_parameters
-      .process(reverse, predelay, size, depth, absorb, tilt, shimmer, mix);
+    let (reverse, predelay, size, depth, absorb, decay, diffuse, tilt, shimmer, mix) =
+      self.smooth_parameters.process(
+        reverse, predelay, size, depth, absorb, decay, tilt, shimmer, mix,
+      );
 
     let predelay_output = self.get_predelay_output(input, predelay, reverse);
     let taps_output = self.taps.process(

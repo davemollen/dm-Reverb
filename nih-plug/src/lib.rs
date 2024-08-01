@@ -77,11 +77,11 @@ impl Plugin for DmReverb {
     _context: &mut impl InitContext<Self>,
   ) -> bool {
     self.reverb = Reverb::new(buffer_config.sample_rate);
-    let (reverse, predelay, size, _speed, depth, absorb, _decay, tilt, shimmer, mix) =
+    let (reverse, predelay, size, _speed, depth, absorb, decay, tilt, shimmer, mix) =
       self.get_params();
-    self
-      .reverb
-      .initialize_params(reverse, predelay, size, depth, absorb, tilt, shimmer, mix);
+    self.reverb.initialize_params(
+      reverse, predelay, size, depth, absorb, decay, tilt, shimmer, mix,
+    );
     true
   }
 

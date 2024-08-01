@@ -85,9 +85,9 @@ impl Plugin for DmReverb {
       self.get_params();
 
     if !self.is_active {
-      self
-        .reverb
-        .initialize_params(reverse, predelay, size, depth, absorb, tilt, shimmer, mix);
+      self.reverb.initialize_params(
+        reverse, predelay, size, depth, absorb, decay, tilt, shimmer, mix,
+      );
       self.is_active = true;
     }
 
