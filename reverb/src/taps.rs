@@ -39,7 +39,6 @@ pub struct Taps {
   diffusers: [AllpassFilter; 4],
   lfo_phasor: Phasor,
   average: Average,
-  saturation: Saturation,
   shimmer: Shimmer,
 }
 
@@ -87,7 +86,6 @@ impl Taps {
       lfo_phasor: Phasor::new(sample_rate),
       shimmer: Shimmer::new(sample_rate),
       average: Average::new(21_f32.mstosamps(sample_rate) as usize),
-      saturation: Saturation::new(sample_rate),
     }
   }
 
@@ -105,13 +103,11 @@ impl Taps {
     let early_reflections = self.early_reflections.process(size, &mut self.delay_lines);
 
     let delay_network_taps = self.read_from_delay_network(size, speed, depth);
-    let delay_network_output = Self::retrieve_delay_network_output(delay_network_taps);
-    let average = self
-      .average
-      .process(delay_network_output.0 + delay_network_output.1);
-    let (saturation_output, gain_compensation) = self
-      .saturation
-      .process(f32x4::from_array(delay_network_taps), average);
+    let average = self.average.get();
+    let saturation_output = Saturation::process(delay_network_taps, average);
+    let delay_network_output = Self::retrieve_delay_network_output(saturation_output);
+    self.average.set(saturation_output.reduce_sum() * 0.5);
+
     let matrix_output = Self::apply_matrix(saturation_output);
     let shimmer_output = self.shimmer.process(input, delay_network_output, shimmer);
     let dc_block_output = self.dc_blocks.process(matrix_output);
@@ -124,11 +120,11 @@ impl Taps {
     self.mix_delay_network_and_reflections(
       delay_network_output,
       early_reflections,
-      gain_compensation,
+      Self::retrieve_gain_compensation(average, 0.5),
     )
   }
 
-  fn read_from_delay_network(&mut self, size: f32, speed: f32, depth: f32) -> [f32; 4] {
+  fn read_from_delay_network(&mut self, size: f32, speed: f32, depth: f32) -> f32x4 {
     let phase = self.lfo_phasor.process(speed);
 
     [
@@ -165,6 +161,7 @@ impl Taps {
         &mut self.grains[3],
       ),
     ]
+    .into()
   }
 
   fn apply_matrix(input: f32x4) -> f32x4 {
@@ -184,7 +181,7 @@ impl Taps {
     });
   }
 
-  fn retrieve_delay_network_output(inputs: [f32; 4]) -> (f32, f32) {
+  fn retrieve_delay_network_output(inputs: f32x4) -> (f32, f32) {
     ((inputs[0] + inputs[2]) * 0.5, (inputs[1] + inputs[3]) * 0.5)
   }
 
@@ -197,5 +194,13 @@ impl Taps {
     let left_out = left_delay_network_out + early_reflections.0;
     let right_out = right_delay_network_out + early_reflections.1;
     (left_out * gain_compensation, right_out * gain_compensation)
+  }
+
+  fn retrieve_gain_compensation(average: f32, threshold: f32) -> f32 {
+    if average > threshold {
+      threshold / average
+    } else {
+      1.
+    }
   }
 }
