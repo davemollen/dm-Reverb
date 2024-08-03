@@ -103,19 +103,17 @@ impl Taps {
     let early_reflections = self.early_reflections.process(size, &mut self.delay_lines);
 
     let delay_network_taps = self.read_from_delay_network(size, speed, depth);
-    let average = self.average.get();
-    let saturation_output = Saturation::process(delay_network_taps, average);
-    let delay_network_output = Self::retrieve_delay_network_output(saturation_output);
-    self.average.set(saturation_output.abs().reduce_max());
+    let delay_network_output = Self::retrieve_delay_network_output(delay_network_taps);
+    let average = self.average.process(delay_network_taps.abs().reduce_max());
 
-    let matrix_output = Self::apply_matrix(saturation_output);
+    let matrix_output = Self::apply_matrix(delay_network_taps);
     let shimmer_output = self.shimmer.process(input, delay_network_output, shimmer);
     let dc_block_output = self.dc_blocks.process(matrix_output);
     let absorb_output = self.absorbance.process(
       dc_block_output + f32x4::from_array([shimmer_output.0, shimmer_output.1, 0., 0.]),
       absorb,
     );
-    self.diffuse_and_write(absorb_output, diffuse, decay);
+    self.diffuse_and_write(absorb_output, diffuse, decay, average);
 
     self.mix_delay_network_and_reflections(
       delay_network_output,
@@ -173,11 +171,12 @@ impl Taps {
     ])
   }
 
-  fn diffuse_and_write(&mut self, input: f32x4, diffuse: f32, decay: f32) {
+  fn diffuse_and_write(&mut self, input: f32x4, diffuse: f32, decay: f32, saturation_mix: f32) {
     input.to_array().into_iter().enumerate().for_each(|(i, x)| {
       let diffuse_output = self.diffusers[i].process(x, self.diffuser_times[i], diffuse);
+      let saturation_output = Saturation::process(diffuse_output * decay, saturation_mix);
 
-      self.delay_lines[i].write(diffuse_output * decay);
+      self.delay_lines[i].write(saturation_output);
     });
   }
 
