@@ -116,10 +116,9 @@ impl Reverb {
   }
 
   fn mix(left: (f32, f32), right: (f32, f32), factor: f32) -> (f32, f32) {
-    let inverted_factor = 1. - factor;
     (
-      left.0 * inverted_factor + right.0 * factor,
-      left.1 * inverted_factor + right.1 * factor,
+      left.0 + (right.0 - left.0) * factor,
+      left.1 + (right.1 - left.1) * factor,
     )
   }
 }

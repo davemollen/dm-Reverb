@@ -61,7 +61,7 @@ impl StereoDelayLine {
 
     let x = self.buffer[index & self.wrap];
     let y = self.buffer[index + 1 & self.wrap];
-    (x.0 * (1. - mix) + y.0 * mix, x.1 * (1. - mix) + y.1 * mix)
+    (x.0 + (y.0 - x.0) * mix, x.1 + (y.1 - x.1) * mix)
   }
 
   fn cosine_interp(&self, time: f32) -> (f32, f32) {
@@ -75,8 +75,8 @@ impl StereoDelayLine {
     let x = self.buffer[index & self.wrap];
     let y = self.buffer[index + 1 & self.wrap];
     (
-      x.0 * (1. - cosine_mix) + y.0 * cosine_mix,
-      x.1 * (1. - cosine_mix) + y.1 * cosine_mix,
+      x.0 + (y.0 - x.0) * cosine_mix,
+      x.1 + (y.1 - x.1) * cosine_mix,
     )
   }
 
