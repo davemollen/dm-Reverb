@@ -23,7 +23,6 @@ struct DmReverb {
 impl DmReverb {
   fn get_params(&self) -> (f32, f32, f32, f32, f32, f32, f32, f32, f32, f32) {
     let depth = self.params.depth.get_value();
-    let shimmer = self.params.shimmer.get_value();
     let tilt = self.params.tilt.value();
 
     (
@@ -39,7 +38,7 @@ impl DmReverb {
       self.params.absorb.get_value(),
       self.params.decay.get_value(),
       tilt * tilt.abs() * 0.5 + 0.5,
-      shimmer * shimmer,
+      self.params.shimmer.get_value(),
       self.params.mix.get_value(),
     )
   }
