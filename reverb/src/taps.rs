@@ -106,7 +106,7 @@ impl Taps {
     let average = self.average.get();
     let saturation_output = Saturation::process(delay_network_taps, average);
     let delay_network_output = Self::retrieve_delay_network_output(saturation_output);
-    self.average.set(saturation_output.reduce_sum() * 0.5);
+    self.average.set(saturation_output.abs().reduce_max());
 
     let matrix_output = Self::apply_matrix(saturation_output);
     let shimmer_output = self.shimmer.process(input, delay_network_output, shimmer);
