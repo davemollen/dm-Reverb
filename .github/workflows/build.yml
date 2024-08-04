@@ -65,12 +65,18 @@ jobs:
       - name: Build nih-plug
         working-directory: ./nih-plug
         run: |
-          cross_target=${{ matrix.cross-target }}
-          if [[ -n $cross_target ]]; then
-            cargo xtask bundle $binary_name --release --target $cross_target
+          runner_name=${{ matrix.name }}
+          if [[ $runner_name = 'macos' ]]; then
+            export MACOSX_DEPLOYMENT_TARGET=10.13
+            cargo xtask bundle-universal $binary_name --release
+          else
+            cross_target=${{ matrix.cross-target }}
+            if [[ -n $cross_target ]]; then
+              cargo xtask bundle $binary_name --release --target $cross_target
+            else
+              cargo xtask bundle $binary_name --release
+            fi
           fi
-
-          cargo xtask bundle $binary_name --release
 
       - name: Determine build archive name
         run: |
