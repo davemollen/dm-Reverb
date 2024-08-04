@@ -3,8 +3,8 @@ use std::simd::f32x4;
 pub struct Saturation;
 
 impl Saturation {
-  pub fn process(taps: f32x4, average: f32) -> f32x4 {
-    let mix = f32x4::splat(average.clamp(0., 1.));
+  pub fn process(taps: f32x4, mix: f32) -> f32x4 {
+    let mix = f32x4::splat((mix * mix).clamp(0., 1.));
     taps + (Self::fast_atan2(taps) - taps) * mix
   }
 

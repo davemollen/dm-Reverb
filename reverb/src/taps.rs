@@ -34,7 +34,7 @@ pub struct Taps {
   diffuser_times: [f32; 4],
   lfo_phase_offsets: [f32; 4],
   grains: [Grains; 4],
-  dc_blocks: DcBlock,
+  dc_block: DcBlock,
   absorbance: OnePoleFilter,
   diffusers: [AllpassFilter; 4],
   lfo_phasor: Phasor,
@@ -74,7 +74,7 @@ impl Taps {
         14.916666666666666,
       ],
       grains: [Grains::new(); 4],
-      dc_blocks: DcBlock::new(sample_rate),
+      dc_block: DcBlock::new(sample_rate),
       absorbance: OnePoleFilter::new(sample_rate),
       diffusers: [
         AllpassFilter::new(sample_rate),
@@ -110,7 +110,7 @@ impl Taps {
 
     let matrix_output = Self::apply_matrix(saturation_output);
     let shimmer_output = self.shimmer.process(input, delay_network_output, shimmer);
-    let dc_block_output = self.dc_blocks.process(matrix_output);
+    let dc_block_output = self.dc_block.process(matrix_output);
     let absorb_output = self.absorbance.process(
       dc_block_output + f32x4::from_array([shimmer_output.0, shimmer_output.1, 0., 0.]),
       absorb,
