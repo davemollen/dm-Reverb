@@ -18,12 +18,8 @@ jobs:
     strategy:
       matrix:
         include:
-          - { name: ubuntu-latest, os: ubuntu-latest, cross-target: "" }
-          - {
-              name: macos-universal,
-              os: macos-latest,
-              cross-target: aarch64-apple-darwin,
-            }
+          - { name: ubuntu, os: ubuntu-latest, cross-target: "" }
+          - { name: macos, os: macos-latest, cross-target: x86_64-apple-darwin }
           - { name: windows, os: windows-latest, cross-target: "" }
     name: Package nih-plug binaries
     runs-on: ${{ matrix.os }}
@@ -62,25 +58,19 @@ jobs:
         # Needed for SIMD
         uses: dtolnay/rust-toolchain@nightly
         with:
-          # The macOS AArch64 build is done from an x86_64 macOS CI runner, so
+          # The macOS x86_64 build is done from an AArch64 macOS CI runner, so
           # it needs to be cross compiled
           targets: ${{ matrix.cross-target }}
 
       - name: Build nih-plug
         working-directory: ./nih-plug
         run: |
-          runner_name=${{ matrix.name }}
-          if [[ $runner_name = 'macos-universal' ]]; then
-            export MACOSX_DEPLOYMENT_TARGET=10.13
-            cargo xtask bundle-universal $binary_name --release
-          else
-            cross_target=${{ matrix.cross-target }}
-            if [[ -n $cross_target ]]; then
-              cargo xtask bundle $binary_name --release --target $cross_target
-            fi
-
-            cargo xtask bundle $binary_name --release
+          cross_target=${{ matrix.cross-target }}
+          if [[ -n $cross_target ]]; then
+            cargo xtask bundle $binary_name --release --target $cross_target
           fi
+
+          cargo xtask bundle $binary_name --release
 
       - name: Determine build archive name
         run: |
