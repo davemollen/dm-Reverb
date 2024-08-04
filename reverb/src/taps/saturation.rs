@@ -1,4 +1,4 @@
-use std::simd::{f32x4, num::SimdFloat};
+use std::simd::f32x4;
 
 pub struct Saturation;
 
@@ -9,9 +9,15 @@ impl Saturation {
   }
 
   fn fast_atan2(x: f32x4) -> f32x4 {
-    let limit = f32x4::splat(1.);
-    let n1 = f32x4::splat(0.97239411);
-    let n2 = f32x4::splat(-0.19194795);
-    ((n1 + n2 * x * x) * x).simd_clamp(-limit, limit)
+    let input_limit = f32x4::splat(2.65155);
+    let output_limit = f32x4::splat(1.);
+
+    if x < -input_limit {
+      output_limit
+    } else if x > input_limit {
+      -output_limit
+    } else {
+      (f32x4::splat(0.97239411) - f32x4::splat(0.19194795) * x * x) * x
+    }
   }
 }
