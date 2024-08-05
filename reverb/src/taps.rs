@@ -119,7 +119,7 @@ impl Taps {
     self.mix_delay_network_and_reflections(
       delay_network_output,
       early_reflections,
-      Self::retrieve_gain_compensation(average, 0.5),
+      Self::retrieve_gain_compensation(average, 0.4),
     )
   }
 
