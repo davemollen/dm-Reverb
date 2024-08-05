@@ -1,52 +1,31 @@
+use std::f32::consts::TAU;
+
 pub struct Average {
-  buffer: Vec<f32>,
-  write_pointer: usize,
-  previous_mean: f32,
+  z: f32,
+  b1: f32,
 }
 
 impl Average {
-  pub fn new(length: usize) -> Self {
+  pub fn new(sample_rate: f32, filter_freq: f32) -> Self {
+    let t = sample_rate.recip() * -TAU;
+
     Self {
-      buffer: vec![0.0; length],
-      write_pointer: 0,
-      previous_mean: 0.,
+      z: 0.,
+      b1: (filter_freq * t).exp(),
     }
   }
 
   pub fn get(&self) -> f32 {
-    let n = self.buffer.len();
-
-    if self.previous_mean <= 0. {
-      0.
-    } else {
-      (self.previous_mean / n as f32).sqrt()
-    }
+    self.z.sqrt()
   }
 
   pub fn set(&mut self, input: f32) {
     let squared = input * input;
-    let oldest_buffer_entry = self.get_oldest_buffer_entry();
-    let mean = squared + self.previous_mean - oldest_buffer_entry;
-
-    self.previous_mean = mean;
-    self.write(squared);
+    self.filter(squared);
   }
 
-  fn wrap(&self, index: usize) -> usize {
-    let buffer_len = self.buffer.len();
-    if index >= buffer_len {
-      index - buffer_len
-    } else {
-      index
-    }
-  }
-
-  fn write(&mut self, value: f32) {
-    self.buffer[self.write_pointer] = value;
-    self.write_pointer = self.wrap(self.write_pointer + 1);
-  }
-
-  fn get_oldest_buffer_entry(&self) -> f32 {
-    self.buffer[self.write_pointer]
+  fn filter(&mut self, input: f32) {
+    let a0 = 1.0 - self.b1;
+    self.z = input * a0 + self.z * self.b1;
   }
 }
