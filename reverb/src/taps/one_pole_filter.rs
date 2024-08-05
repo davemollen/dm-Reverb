@@ -8,7 +8,7 @@ pub struct OnePoleFilter {
 impl OnePoleFilter {
   pub fn new(sample_rate: f32) -> Self {
     Self {
-      t: 44100_f32.recip() * sample_rate,
+      t: sample_rate.recip() * 44100.,
       z: f32x4::splat(0.),
     }
   }

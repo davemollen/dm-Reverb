@@ -73,7 +73,7 @@ impl SmoothParameters {
     let mix = self.smooth_mix.process(mix);
 
     let diffuse = (absorb * 3.).min(1.) * 0.8;
-    let absorb = (absorb - 0.3333333).max(0.) * 1.5;
+    let absorb = (absorb - 0.3333333).max(0.) * 1.490214; // maximum is 0.993476 which equals a cutoff freq of 50Hz
 
     (
       reverse, predelay, size, depth, absorb, decay, diffuse, tilt, shimmer, mix,
