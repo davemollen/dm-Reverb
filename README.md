@@ -1,37 +1,38 @@
 ## dm-Reverb
 
-A reverb effect written in Rust.
+A reverb effect written in Rust inspired by the Make Noise Erbe-Verb.
 
-The effect can be compiled to a [MOD devices](https://moddevices.com/), VST3 or CLAP plugin.
-VST is a trademark of Steinberg Media Technologies GmbH, registered in Europe and other countries.
+The effect can be compiled to a [MOD audio](https://mod.audio/), VST3 or CLAP plugin.
 
-<img src="https://steinbergmedia.github.io/vst3_dev_portal/resources/licensing_6.png" width="60" height="auto" alt="VST trademark">
+More technical information about the Erbe-Verb design can be found in this [talk](https://youtu.be/Il_qdtQKnqk?si=oGm_0KLFcN9MhcBE) and this [research paper](https://quod.lib.umich.edu/cgi/p/pod/dod-idx/building-the-erbe-verb-extending-the-feedback-delay-network.pdf?c=icmc;idno=bbp2372.2015.054;format=pdf).
 
 ## Table of contents:
 
-- [Download VST3 and CLAP plugin](#Download-VST3-and-CLAP-plugin)
-- [MOD devices installation](#MOD-devices-installation)
-- [Other plugin formats](#Other-plugin-formats)
+- [VST3 and CLAP installation](#VST3-and-CLAP-installation)
+- [MOD installation](#MOD-installation)
+- [Copyright notices](#Copyright-notices)
 
-## Download VST3 and CLAP plugin
+## VST3 and CLAP installation
 
-You can download the VST3 and CLAP plugins for Linux, Windows and macOS from the [release page](https://github.com/davemollen/dm-Reverb/releases).
+You can download the VST3 and CLAP plugins for Linux, Windows and macOS from the [releases page](https://github.com/davemollen/dm-Reverb/releases).
 
 On macOS you may need to [disable Gatekeeper](https://disable-gatekeeper.github.io/) as Apple has recently made it more difficult to run unsigned code on macOS.
 
-If you want to build the plugin on your own machine, check out the [nih-plug readme](https://github.com/robbert-vdh/nih-plug). Build scripts for macOS specifically can be found in the [./scripts](./scripts/) folder of this repository.
+If you want to build the plugin on your own machine check out the [nih-plug repository](https://github.com/robbert-vdh/nih-plug) for instructions.
 
-## MOD devices installation
+## MOD installation
 
 This plugin is not yet in the MOD Audio plugin store.
-However, you can find a build of the plugin for the MOD Dwarf at [./lv2/dm-Reverb.lv2](./lv2/dm-Reverb.lv2/). Copy this file to your MOD devices' plugin folder. If you want a build for MOD Duo or MOD Duo X you'll need to build the plugin yourself for now. For more information about building this plugin for your MOD device, see [these instructions](https://github.com/moddevices/mod-plugin-builder).
+However, you can download the latest MOD Dwarf build from the [releases page](https://github.com/davemollen/dm-Reverb/releases).
 
-## Other plugin formats
+If you want to build the plugin on your own machine check out the [mod-plugin-builder repository](https://github.com/moddevices/mod-plugin-builder) for instructions.
 
-- VST2:
+## Copyright notices
 
-  Legacy code for a VST2 plugin is also in this repository. Since VST2 has been deprecated automated builds for VST2 have been excluded.
+Make Noise Erbe-Verb is a trademark or trade name of another manufacturer and was used merely to identify the product whose sound was reviewed in the creation of this product.
 
-- LV2
+VST is a trademark of Steinberg Media Technologies GmbH, registered in Europe and other countries.
 
-  Code for a LV2 plugin is also in this repository. Automated builds are excluded for LV2 because the rust lv2 crate doesn't have GUI support. The LV2 plugin format is being used for the MOD devices plugin which in turn does have a GUI. Because MOD has it's own GUI layer on top of the LV2 plugin.
+All other trademarks are the property of their respective holders.
+
+<img src="https://steinbergmedia.github.io/vst3_dev_portal/resources/licensing_6.png" width="60" height="auto" alt="VST trademark">
