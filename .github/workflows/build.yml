@@ -36,6 +36,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libasound2-dev libgl-dev libjack-dev libx11-xcb-dev  libxcb1-dev libxcb-dri2-0-dev libxcb-icccm4-dev libxcursor-dev libxkbcommon-dev libxcb-shape0-dev libxcb-xfixes0-dev
 
+      - name: Install dependencies
+        if: startsWith(matrix.os, 'windows')
+        run: choco install zip -y
+
       - uses: actions/cache@v4
         # FIXME: Caching `target/` causes the Windows runner to blow up after some time
         if: startsWith(matrix.os, 'windows')
@@ -100,7 +104,7 @@ jobs:
         run: cp ".github/workflows/readme-${{ runner.os }}.txt" "$ARCHIVE_NAME/README.txt"
 
       - name: Zip files
-        run: tar -cf $ARCHIVE_NAME.zip $ARCHIVE_NAME
+        run: zip -r $ARCHIVE_NAME.zip $ARCHIVE_NAME
 
       - name: Add zip to release
         uses: softprops/action-gh-release@v2
@@ -150,7 +154,7 @@ jobs:
           mkdir -p $ARCHIVE_NAME
           docker cp mpb:/root/mod-workdir/${{ matrix.platform }}/plugins/$plugin_name.lv2 $ARCHIVE_NAME
           cp .github/workflows/readme-Mod.txt "$ARCHIVE_NAME/README.txt"
-          tar -cf $ARCHIVE_NAME.zip $ARCHIVE_NAME
+          zip -r $ARCHIVE_NAME.zip $ARCHIVE_NAME
 
       - name: Add zip to release
         uses: softprops/action-gh-release@v2
