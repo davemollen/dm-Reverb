@@ -24,3 +24,7 @@ harness = false
 [[bench]]
 name = "taps_bench"
 harness = false
+
+[[bench]]
+name = "early_rf_bench"
+harness = false

@@ -18,8 +18,6 @@ pub trait DelayRead {
     grains: &mut Grains,
   ) -> f32;
 
-  fn early_reflection_read(&mut self, size: f32, time_fraction: f32) -> f32;
-
   fn vibrato_read(
     &mut self,
     size: f32,
@@ -56,10 +54,6 @@ impl DelayRead for DelayLine {
     } else {
       self.grain_read(grains, size, time_fraction, lfo_phase, lfo_depth)
     }
-  }
-
-  fn early_reflection_read(&mut self, size: f32, time_fraction: f32) -> f32 {
-    self.read(size * time_fraction, Interpolation::Linear)
   }
 
   fn vibrato_read(

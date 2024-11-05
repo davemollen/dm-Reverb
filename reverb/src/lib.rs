@@ -8,26 +8,19 @@ pub mod shared {
   pub mod stereo_delay_line;
 }
 mod mix;
-mod reverse;
+mod predelay;
 mod smooth_parameters;
 mod taps;
 mod tilt_filter;
-pub use taps::Taps;
+
+pub use taps::{EarlyReflections, Taps};
 use {
-  mix::Mix,
-  reverse::Reverse,
-  shared::{
-    constants::{MAX_PREDELAY, MIN_PREDELAY},
-    float_ext::FloatExt,
-    stereo_delay_line::{Interpolation, StereoDelayLine},
-  },
-  smooth_parameters::SmoothParameters,
+  mix::Mix, predelay::PreDelay, shared::float_ext::FloatExt, smooth_parameters::SmoothParameters,
   tilt_filter::TiltFilter,
 };
 
 pub struct Reverb {
-  predelay_tap: StereoDelayLine,
-  reverse: Reverse,
+  predelay: PreDelay,
   taps: Taps,
   tilt_filter: TiltFilter,
   smooth_parameters: SmoothParameters,
@@ -36,11 +29,7 @@ pub struct Reverb {
 impl Reverb {
   pub fn new(sample_rate: f32) -> Self {
     Self {
-      predelay_tap: StereoDelayLine::new(
-        (sample_rate * (MIN_PREDELAY + MAX_PREDELAY) / 1000.) as usize,
-        sample_rate,
-      ),
-      reverse: Reverse::new(sample_rate),
+      predelay: PreDelay::new(sample_rate),
       taps: Taps::new(sample_rate),
       tilt_filter: TiltFilter::new(sample_rate),
       smooth_parameters: SmoothParameters::new(sample_rate),
@@ -83,7 +72,7 @@ impl Reverb {
         reverse, predelay, size, depth, absorb, decay, tilt, shimmer, mix,
       );
 
-    let predelay_output = self.get_predelay_output(input, predelay, reverse);
+    let predelay_output = self.predelay.process(input, predelay, reverse);
     let taps_output = self.taps.process(
       predelay_output,
       size,
@@ -97,28 +86,5 @@ impl Reverb {
 
     let tilt_filter_output = self.tilt_filter.process(taps_output, tilt);
     Mix::process(input, tilt_filter_output, mix)
-  }
-
-  fn get_predelay_output(&mut self, input: (f32, f32), time: f32, reverse: f32) -> (f32, f32) {
-    let predelay_output = if reverse == 0. {
-      self.predelay_tap.read(time, Interpolation::Linear)
-    } else if reverse == 1. {
-      self.reverse.process(&mut self.predelay_tap, time)
-    } else {
-      Self::mix(
-        self.predelay_tap.read(time, Interpolation::Linear),
-        self.reverse.process(&mut self.predelay_tap, time),
-        reverse,
-      )
-    };
-    self.predelay_tap.write(input);
-    predelay_output
-  }
-
-  fn mix(left: (f32, f32), right: (f32, f32), factor: f32) -> (f32, f32) {
-    (
-      left.0 + (right.0 - left.0) * factor,
-      left.1 + (right.1 - left.1) * factor,
-    )
   }
 }

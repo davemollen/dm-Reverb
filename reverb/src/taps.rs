@@ -8,6 +8,7 @@ mod one_pole_filter;
 mod saturation;
 mod shimmer;
 
+pub use early_reflections::EarlyReflections;
 use {
   crate::shared::{
     constants::{MAX_DEPTH, MAX_SIZE},
@@ -18,7 +19,6 @@ use {
   average::Average,
   dc_block::DcBlock,
   delay_read::DelayRead,
-  early_reflections::EarlyReflections,
   grains::Grains,
   one_pole_filter::OnePoleFilter,
   saturation::Saturation,
