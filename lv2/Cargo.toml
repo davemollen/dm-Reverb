@@ -5,7 +5,9 @@ authors = ["davemollen <davemollen@gmail.com>"]
 edition = "2021"
 
 [dependencies]
-lv2 = { version = "0.6.0", features = ["minimal_plugin"] }
+lv2 = { git = "https://github.com/davemollen/rust-lv2.git", features = [
+    "minimal_plugin",
+] }
 reverb = { path = "../reverb" }
 
 [lib]
