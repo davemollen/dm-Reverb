@@ -1,7 +1,7 @@
 extern crate lv2;
 extern crate reverb;
 use lv2::prelude::*;
-use reverb::{shared::constants::MAX_DEPTH, Reverb};
+use reverb::{shared::constants::MAX_DEPTH, Reverb, SmoothParameters};
 
 #[derive(PortCollection)]
 struct Ports {
@@ -24,7 +24,7 @@ struct Ports {
 #[uri("https://github.com/davemollen/dm-Reverb")]
 struct DmReverb {
   reverb: Reverb,
-  is_active: bool,
+  smooth_parameters: SmoothParameters
 }
 
 impl DmReverb {
@@ -57,9 +57,11 @@ impl Plugin for DmReverb {
 
   // Create a new instance of the plugin; Trivial in this case.
   fn new(_plugin_info: &PluginInfo, _features: &mut ()) -> Option<Self> {
+    let sample_rate = _plugin_info.sample_rate() as f32;
+
     Some(Self {
-      reverb: Reverb::new(_plugin_info.sample_rate() as f32),
-      is_active: false,
+      reverb: Reverb::new(sample_rate),
+      smooth_parameters: SmoothParameters::new(sample_rate),
     })
   }
 
@@ -68,13 +70,7 @@ impl Plugin for DmReverb {
   fn run(&mut self, ports: &mut Ports, _features: &mut (), _sample_count: u32) {
     let (reverse, predelay, size, speed, depth, absorb, decay, tilt, shimmer, mix) =
       self.get_params(ports);
-
-    if !self.is_active {
-      self.reverb.initialize_params(
-        reverse, predelay, size, depth, absorb, decay, tilt, shimmer, mix,
-      );
-      self.is_active = true;
-    }
+    self.smooth_parameters.set_targets(reverse, predelay, size, depth, absorb, decay, tilt, shimmer, mix);
 
     let input_channels = ports.input_left.iter().zip(ports.input_right.iter());
     let output_channels = ports
@@ -84,21 +80,11 @@ impl Plugin for DmReverb {
 
     input_channels.zip(output_channels).for_each(
       |((input_left, input_right), (output_left, output_right))| {
-        let reverb_output = self.reverb.process(
+        (*output_left, *output_right) = self.reverb.process(
           (*input_left, *input_right),
-          reverse,
-          predelay,
-          size,
           speed,
-          depth,
-          absorb,
-          decay,
-          tilt,
-          shimmer,
-          mix,
+          &mut self.smooth_parameters
         );
-        *output_left = reverb_output.0;
-        *output_right = reverb_output.1;
       },
     );
   }

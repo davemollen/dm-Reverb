@@ -1,5 +1,5 @@
 use nih_plug::prelude::*;
-use reverb::{shared::constants::MAX_DEPTH, Reverb};
+use reverb::{shared::constants::MAX_DEPTH, Reverb, SmoothParameters};
 mod reverb_parameters;
 use reverb_parameters::ReverbParameters;
 use std::sync::Arc;
@@ -8,6 +8,7 @@ mod editor;
 struct DmReverb {
   params: Arc<ReverbParameters>,
   reverb: Reverb,
+  smooth_parameters: SmoothParameters,
 }
 
 impl Default for DmReverb {
@@ -16,6 +17,7 @@ impl Default for DmReverb {
     Self {
       params: params.clone(),
       reverb: Reverb::new(44100.),
+      smooth_parameters: SmoothParameters::new(44100.)
     }
   }
 }
@@ -76,11 +78,7 @@ impl Plugin for DmReverb {
     _context: &mut impl InitContext<Self>,
   ) -> bool {
     self.reverb = Reverb::new(buffer_config.sample_rate);
-    let (reverse, predelay, size, _speed, depth, absorb, decay, tilt, shimmer, mix) =
-      self.get_params();
-    self.reverb.initialize_params(
-      reverse, predelay, size, depth, absorb, decay, tilt, shimmer, mix,
-    );
+    self.smooth_parameters = SmoothParameters::new(buffer_config.sample_rate);
     true
   }
 
@@ -92,28 +90,18 @@ impl Plugin for DmReverb {
   ) -> ProcessStatus {
     let (reverse, predelay, size, speed, depth, absorb, decay, tilt, shimmer, mix) =
       self.get_params();
+    self.smooth_parameters.set_targets(reverse, predelay, size, depth, absorb, decay, tilt, shimmer, mix);
 
     buffer.iter_samples().for_each(|mut channel_samples| {
       let channel_iterator = &mut channel_samples.iter_mut();
       let left_channel = channel_iterator.next().unwrap();
       let right_channel = channel_iterator.next().unwrap();
 
-      let (reverb_left, reverb_right) = self.reverb.process(
+      (*left_channel, *right_channel) = self.reverb.process(
         (*left_channel, *right_channel),
-        reverse,
-        predelay,
-        size,
         speed,
-        depth,
-        absorb,
-        decay,
-        tilt,
-        shimmer,
-        mix,
+        &mut self.smooth_parameters
       );
-
-      *left_channel = reverb_left;
-      *right_channel = reverb_right;
     });
     ProcessStatus::Normal
   }

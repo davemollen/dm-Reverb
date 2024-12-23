@@ -3,7 +3,6 @@ pub mod shared {
   pub mod constants;
   pub mod delay_line;
   pub mod float_ext;
-  pub mod param_filter;
   pub mod phasor;
   pub mod stereo_delay_line;
 }
@@ -12,18 +11,20 @@ mod predelay;
 mod smooth_parameters;
 mod taps;
 mod tilt_filter;
-
-pub use taps::{EarlyReflections, Taps};
 use {
-  mix::Mix, predelay::PreDelay, shared::float_ext::FloatExt, smooth_parameters::SmoothParameters,
+  mix::Mix, predelay::PreDelay,
+  smooth_parameters::Smoother,
   tilt_filter::TiltFilter,
+};
+pub use {
+  smooth_parameters::SmoothParameters,
+  taps::{EarlyReflections, Taps}
 };
 
 pub struct Reverb {
   predelay: PreDelay,
   taps: Taps,
-  tilt_filter: TiltFilter,
-  smooth_parameters: SmoothParameters,
+  tilt_filter: TiltFilter
 }
 
 impl Reverb {
@@ -32,45 +33,26 @@ impl Reverb {
       predelay: PreDelay::new(sample_rate),
       taps: Taps::new(sample_rate),
       tilt_filter: TiltFilter::new(sample_rate),
-      smooth_parameters: SmoothParameters::new(sample_rate),
     }
-  }
-
-  pub fn initialize_params(
-    &mut self,
-    reverse: f32,
-    predelay: f32,
-    size: f32,
-    depth: f32,
-    absorb: f32,
-    decay: f32,
-    tilt: f32,
-    shimmer: f32,
-    mix: f32,
-  ) {
-    self.smooth_parameters.initialize(
-      reverse, predelay, size, depth, absorb, decay, tilt, shimmer, mix,
-    );
   }
 
   pub fn process(
     &mut self,
     input: (f32, f32),
-    reverse: f32,
-    predelay: f32,
-    size: f32,
     speed: f32,
-    depth: f32,
-    absorb: f32,
-    decay: f32,
-    tilt: f32,
-    shimmer: f32,
-    mix: f32,
+    smooth_parameters: &mut SmoothParameters
   ) -> (f32, f32) {
-    let (reverse, predelay, size, depth, absorb, decay, diffuse, tilt, shimmer, mix) =
-      self.smooth_parameters.process(
-        reverse, predelay, size, depth, absorb, decay, tilt, shimmer, mix,
-      );
+    let reverse = smooth_parameters.reverse.next();
+    let predelay = smooth_parameters.predelay.next();
+    let size = smooth_parameters.size.next();
+    let depth = smooth_parameters.depth.next();
+    let absorb = smooth_parameters.absorb.next();
+    let decay = smooth_parameters.decay.next();
+    let tilt = smooth_parameters.tilt.next();
+    let shimmer = smooth_parameters.shimmer.next();
+    let mix = smooth_parameters.mix.next();
+    let diffuse = (absorb * 3.).min(1.) * 0.8;
+    let absorb = (absorb - 0.3333333).max(0.) * 1.490214; // maximum is 0.993476 which equals a cutoff freq of 50Hz
 
     let predelay_output = self.predelay.process(input, predelay, reverse);
     let taps_output = self.taps.process(
