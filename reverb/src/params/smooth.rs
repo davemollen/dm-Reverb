@@ -3,9 +3,9 @@ use std::f32::consts::TAU;
 pub trait Smoother {
   fn set_target(&mut self, target: f32);
 
-  fn next(&mut self) -> f32;
+  fn get_target(&self) -> f32;
 
-  fn current(&self) -> f32;
+  fn next(&mut self) -> f32;
 }
 
 pub struct LinearSmooth {
@@ -32,8 +32,8 @@ impl LinearSmooth {
 
 impl Smoother for LinearSmooth {
   fn set_target(&mut self, target: f32) {
+    self.target = target;
     if self.is_initialized {
-      self.target = target;
       let diff = target - self.current;
       self.step_size = diff * self.factor;
       self.is_active = diff.abs() > f32::EPSILON;
@@ -42,6 +42,10 @@ impl Smoother for LinearSmooth {
       self.is_active = false;
       self.is_initialized = true;
     };
+  }
+
+  fn get_target(&self) -> f32 {
+    self.target
   }
 
   fn next(&mut self) -> f32 {
@@ -55,10 +59,6 @@ impl Smoother for LinearSmooth {
     }
     self.current += self.step_size;
     return self.current
-  }
-
-  fn current(&self) -> f32 {
-    self.current
   }
 }
 
@@ -84,14 +84,18 @@ impl ExponentialSmooth {
 
 impl Smoother for ExponentialSmooth {
   fn set_target(&mut self, target: f32) {
+    self.target = target;
     if self.is_initialized {
-      self.target = target;
       self.is_active = (self.current - self.target).abs() > f32::EPSILON;
     } else {
       self.current = target;
       self.is_active = false;
       self.is_initialized = true;
     };
+  }
+
+  fn get_target(&self) -> f32 {
+    self.target
   }
 
   fn next(&mut self) -> f32 {
@@ -106,10 +110,6 @@ impl Smoother for ExponentialSmooth {
     let a0 = 1.0 - self.b1;
     self.current = self.target * a0 + self.current * self.b1;  
     return self.current
-  }
-
-  fn current(&self) -> f32 {
-    self.current
   }
 }
 
@@ -135,14 +135,18 @@ impl LogarithmicSmooth {
 
 impl Smoother for LogarithmicSmooth {
   fn set_target(&mut self, target: f32) {
+    self.target = target;
     if self.is_initialized {
-      self.target = target;
       self.is_active = (self.current - self.target).abs() > f32::EPSILON;
     } else {
       self.current = target;
       self.is_active = false;
       self.is_initialized = true;
     };
+  }
+
+  fn get_target(&self) -> f32 {
+    self.target
   }
 
   fn next(&mut self) -> f32 {
@@ -158,9 +162,5 @@ impl Smoother for LogarithmicSmooth {
     let ad = 0.693147 * self.factor;
     self.current += difference * ad;
     return self.current
-  }
-
-  fn current(&self) -> f32 {
-    self.current
   }
 }

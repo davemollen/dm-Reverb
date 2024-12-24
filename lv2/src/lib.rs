@@ -1,7 +1,7 @@
 extern crate lv2;
 extern crate reverb;
 use lv2::prelude::*;
-use reverb::{shared::constants::MAX_DEPTH, Reverb, SmoothParameters};
+use reverb::{Reverb, Params};
 
 #[derive(PortCollection)]
 struct Ports {
@@ -24,27 +24,7 @@ struct Ports {
 #[uri("https://github.com/davemollen/dm-Reverb")]
 struct DmReverb {
   reverb: Reverb,
-  smooth_parameters: SmoothParameters
-}
-
-impl DmReverb {
-  fn get_params(&self, ports: &mut Ports) -> (f32, f32, f32, f32, f32, f32, f32, f32, f32, f32) {
-    let depth = *ports.depth * 0.01;
-    let tilt = *ports.tilt * 0.01;
-
-    (
-      *ports.reverse,
-      *ports.predelay,
-      *ports.size,
-      *ports.speed,
-      depth * depth.abs() * MAX_DEPTH,
-      *ports.absorb * 0.01,
-      *ports.decay * 0.01,
-      tilt * tilt.abs() * 0.5 + 0.5,
-      *ports.shimmer * 0.01,
-      *ports.mix * 0.01,
-    )
-  }
+  params: Params
 }
 
 impl Plugin for DmReverb {
@@ -61,16 +41,25 @@ impl Plugin for DmReverb {
 
     Some(Self {
       reverb: Reverb::new(sample_rate),
-      smooth_parameters: SmoothParameters::new(sample_rate),
+      params: Params::new(sample_rate),
     })
   }
 
   // Process a chunk of audio. The audio ports are dereferenced to slices, which the plugin
   // iterates over.
   fn run(&mut self, ports: &mut Ports, _features: &mut (), _sample_count: u32) {
-    let (reverse, predelay, size, speed, depth, absorb, decay, tilt, shimmer, mix) =
-      self.get_params(ports);
-    self.smooth_parameters.set_targets(reverse, predelay, size, depth, absorb, decay, tilt, shimmer, mix);
+    self.params.set(
+      *ports.reverse,
+      *ports.predelay,
+      *ports.size,
+      *ports.speed,
+      *ports.depth * 0.01,
+      *ports.absorb * 0.01,
+      *ports.decay * 0.01,
+      *ports.tilt * 0.01,
+      *ports.shimmer * 0.01,
+      *ports.mix * 0.01,
+    );
 
     let input_channels = ports.input_left.iter().zip(ports.input_right.iter());
     let output_channels = ports
@@ -82,8 +71,7 @@ impl Plugin for DmReverb {
       |((input_left, input_right), (output_left, output_right))| {
         (*output_left, *output_right) = self.reverb.process(
           (*input_left, *input_right),
-          speed,
-          &mut self.smooth_parameters
+          &mut self.params
         );
       },
     );

@@ -1,5 +1,5 @@
 use nih_plug::prelude::*;
-use reverb::{shared::constants::MAX_DEPTH, Reverb, SmoothParameters};
+use reverb::{Reverb, Params as ProcessedParams};
 mod reverb_parameters;
 use reverb_parameters::ReverbParameters;
 use std::sync::Arc;
@@ -8,7 +8,7 @@ mod editor;
 struct DmReverb {
   params: Arc<ReverbParameters>,
   reverb: Reverb,
-  smooth_parameters: SmoothParameters,
+  processed_params: ProcessedParams,
 }
 
 impl Default for DmReverb {
@@ -17,28 +17,8 @@ impl Default for DmReverb {
     Self {
       params: params.clone(),
       reverb: Reverb::new(44100.),
-      smooth_parameters: SmoothParameters::new(44100.)
+      processed_params: ProcessedParams::new(44100.)
     }
-  }
-}
-
-impl DmReverb {
-  fn get_params(&self) -> (f32, f32, f32, f32, f32, f32, f32, f32, f32, f32) {
-    let depth = self.params.depth.value();
-    let tilt = self.params.tilt.value();
-
-    (
-      if self.params.reverse.value() { 1. } else { 0. },
-      self.params.predelay.value(),
-      self.params.size.value(),
-      self.params.speed.value(),
-      depth * depth.abs() * MAX_DEPTH,
-      self.params.absorb.value(),
-      self.params.decay.value(),
-      tilt * tilt.abs() * 0.5 + 0.5,
-      self.params.shimmer.value(),
-      self.params.mix.value(),
-    )
   }
 }
 
@@ -78,7 +58,7 @@ impl Plugin for DmReverb {
     _context: &mut impl InitContext<Self>,
   ) -> bool {
     self.reverb = Reverb::new(buffer_config.sample_rate);
-    self.smooth_parameters = SmoothParameters::new(buffer_config.sample_rate);
+    self.processed_params = ProcessedParams::new(buffer_config.sample_rate);
     true
   }
 
@@ -88,9 +68,18 @@ impl Plugin for DmReverb {
     _aux: &mut AuxiliaryBuffers,
     _context: &mut impl ProcessContext<Self>,
   ) -> ProcessStatus {
-    let (reverse, predelay, size, speed, depth, absorb, decay, tilt, shimmer, mix) =
-      self.get_params();
-    self.smooth_parameters.set_targets(reverse, predelay, size, depth, absorb, decay, tilt, shimmer, mix);
+    self.processed_params.set(
+      if self.params.reverse.value() { 1. } else { 0. }, 
+      self.params.predelay.value(), 
+      self.params.size.value(), 
+      self.params.speed.value(), 
+      self.params.depth.value(), 
+      self.params.absorb.value(), 
+      self.params.decay.value(), 
+      self.params.tilt.value(), 
+      self.params.shimmer.value(), 
+      self.params.mix.value()
+    );
 
     buffer.iter_samples().for_each(|mut channel_samples| {
       let channel_iterator = &mut channel_samples.iter_mut();
@@ -99,8 +88,7 @@ impl Plugin for DmReverb {
 
       (*left_channel, *right_channel) = self.reverb.process(
         (*left_channel, *right_channel),
-        speed,
-        &mut self.smooth_parameters
+        &mut self.processed_params
       );
     });
     ProcessStatus::Normal
