@@ -1,5 +1,5 @@
 use nih_plug::prelude::*;
-use reverb::{Params as ProcessedParams, Reverb};
+use reverb::{Params as ProcessParams, Reverb};
 mod reverb_parameters;
 use reverb_parameters::ReverbParameters;
 use std::sync::Arc;
@@ -8,7 +8,7 @@ mod editor;
 struct DmReverb {
   params: Arc<ReverbParameters>,
   reverb: Reverb,
-  processed_params: ProcessedParams,
+  process_params: ProcessParams,
 }
 
 impl Default for DmReverb {
@@ -17,7 +17,7 @@ impl Default for DmReverb {
     Self {
       params: params.clone(),
       reverb: Reverb::new(44100.),
-      processed_params: ProcessedParams::new(44100.),
+      process_params: ProcessParams::new(44100.),
     }
   }
 }
@@ -58,7 +58,7 @@ impl Plugin for DmReverb {
     _context: &mut impl InitContext<Self>,
   ) -> bool {
     self.reverb = Reverb::new(buffer_config.sample_rate);
-    self.processed_params = ProcessedParams::new(buffer_config.sample_rate);
+    self.process_params = ProcessParams::new(buffer_config.sample_rate);
     true
   }
 
@@ -68,7 +68,7 @@ impl Plugin for DmReverb {
     _aux: &mut AuxiliaryBuffers,
     _context: &mut impl ProcessContext<Self>,
   ) -> ProcessStatus {
-    self.processed_params.set(
+    self.process_params.set(
       if self.params.reverse.value() { 1. } else { 0. },
       self.params.predelay.value(),
       self.params.size.value(),
@@ -88,7 +88,7 @@ impl Plugin for DmReverb {
 
       (*left_channel, *right_channel) = self
         .reverb
-        .process((*left_channel, *right_channel), &mut self.processed_params);
+        .process((*left_channel, *right_channel), &mut self.process_params);
     });
     ProcessStatus::Normal
   }

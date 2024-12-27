@@ -15,21 +15,23 @@ pub struct Params {
   pub tilt: ExponentialSmooth,
   pub shimmer: ExponentialSmooth,
   pub mix: ExponentialSmooth,
+  is_initialized: bool,
 }
 
 impl Params {
   pub fn new(sample_rate: f32) -> Self {
     Self {
-      reverse: ExponentialSmooth::new(12., sample_rate),
-      predelay: ExponentialSmooth::new(7., sample_rate),
-      size: ExponentialSmooth::new(2., sample_rate),
+      reverse: ExponentialSmooth::new(sample_rate, 12.),
+      predelay: ExponentialSmooth::new(sample_rate, 7.),
+      size: ExponentialSmooth::new(sample_rate, 2.),
       speed: 0.,
-      depth: ExponentialSmooth::new(12., sample_rate),
-      absorb: ExponentialSmooth::new(12., sample_rate),
-      decay: ExponentialSmooth::new(12., sample_rate),
-      tilt: ExponentialSmooth::new(12., sample_rate),
-      shimmer: ExponentialSmooth::new(12., sample_rate),
-      mix: ExponentialSmooth::new(12., sample_rate),
+      depth: ExponentialSmooth::new(sample_rate, 12.),
+      absorb: ExponentialSmooth::new(sample_rate, 12.),
+      decay: ExponentialSmooth::new(sample_rate, 12.),
+      tilt: ExponentialSmooth::new(sample_rate, 12.),
+      shimmer: ExponentialSmooth::new(sample_rate, 12.),
+      mix: ExponentialSmooth::new(sample_rate, 12.),
+      is_initialized: false,
     }
   }
 
@@ -46,15 +48,31 @@ impl Params {
     shimmer: f32,
     mix: f32,
   ) {
-    self.reverse.set_target(reverse);
-    self.predelay.set_target(predelay);
-    self.size.set_target(size);
     self.speed = speed;
-    self.depth.set_target(depth * depth.abs() * MAX_DEPTH);
-    self.absorb.set_target(absorb);
-    self.decay.set_target(decay);
-    self.tilt.set_target(tilt * tilt.abs() * 0.5 + 0.5);
-    self.shimmer.set_target(shimmer);
-    self.mix.set_target(mix);
+    let depth = depth * depth.abs() * MAX_DEPTH;
+    let tilt = tilt * tilt.abs() * 0.5 + 0.5;
+
+    if self.is_initialized {
+      self.reverse.set_target(reverse);
+      self.predelay.set_target(predelay);
+      self.size.set_target(size);
+      self.depth.set_target(depth);
+      self.absorb.set_target(absorb);
+      self.decay.set_target(decay);
+      self.tilt.set_target(tilt);
+      self.shimmer.set_target(shimmer);
+      self.mix.set_target(mix);
+    } else {
+      self.reverse.reset(reverse);
+      self.predelay.reset(predelay);
+      self.size.reset(size);
+      self.depth.reset(depth);
+      self.absorb.reset(absorb);
+      self.decay.reset(decay);
+      self.tilt.reset(tilt);
+      self.shimmer.reset(shimmer);
+      self.mix.reset(mix);
+      self.is_initialized = true;
+    }
   }
 }
