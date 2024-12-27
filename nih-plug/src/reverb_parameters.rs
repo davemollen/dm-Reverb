@@ -1,13 +1,13 @@
-use std::sync::Arc;
 use nih_plug::{
   formatters::{s2v_f32_percentage, v2s_f32_percentage},
   prelude::{BoolParam, FloatParam, FloatRange, Params},
 };
 use nih_plug_vizia::ViziaState;
 use reverb::shared::constants::{MAX_PREDELAY, MAX_SIZE, MIN_PREDELAY, MIN_SIZE};
+use std::sync::Arc;
 mod custom_formatters;
-use custom_formatters::v2s_f32_digits;
 use crate::editor;
+use custom_formatters::v2s_f32_digits;
 
 #[derive(Params)]
 pub struct ReverbParameters {
@@ -16,10 +16,10 @@ pub struct ReverbParameters {
 
   #[id = "size"]
   pub size: FloatParam,
-  
+
   #[id = "predelay"]
   pub predelay: FloatParam,
-  
+
   #[id = "reverse"]
   pub reverse: BoolParam,
 
@@ -49,7 +49,7 @@ impl Default for ReverbParameters {
   fn default() -> Self {
     Self {
       editor_state: editor::default_state(),
-      
+
       size: FloatParam::new(
         "Size",
         80.,
@@ -60,7 +60,7 @@ impl Default for ReverbParameters {
         },
       )
       .with_value_to_string(v2s_f32_digits(2)),
-      
+
       predelay: FloatParam::new(
         "Predelay",
         MIN_PREDELAY,
@@ -72,7 +72,7 @@ impl Default for ReverbParameters {
       )
       .with_unit(" ms")
       .with_value_to_string(v2s_f32_digits(2)),
-      
+
       reverse: BoolParam::new("Reverse", false),
 
       speed: FloatParam::new(
@@ -82,7 +82,7 @@ impl Default for ReverbParameters {
           min: 0.02,
           max: 150.,
           factor: 0.333333,
-          center: 5.
+          center: 5.,
         },
       )
       .with_unit(" Hz")

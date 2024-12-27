@@ -1,4 +1,4 @@
-use reverb::{Reverb, Params};
+use reverb::{Params, Reverb};
 
 fn generate_signal() -> f32 {
   fastrand::f32() * 2. - 1.

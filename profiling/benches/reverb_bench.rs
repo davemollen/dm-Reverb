@@ -1,5 +1,5 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use reverb::{Reverb, Params};
+use reverb::{Params, Reverb};
 
 fn generate_signal() -> f32 {
   fastrand::f32() * 2. - 1.

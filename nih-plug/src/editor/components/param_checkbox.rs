@@ -1,11 +1,17 @@
 use nih_plug::prelude::{Param, ParamPtr};
-use std::any::Any;
 use nih_plug_vizia::vizia::{
-  prelude::{ActionModifiers, LayoutModifiers, Context, EmitContext, LensExt, Units::{Stretch, Pixels}},
-  view::Handle,
   binding::Lens,
-  views::{Checkbox, Label, VStack}, modifiers::TextModifiers, style::FontWeightKeyword, layout::Units::Auto
+  layout::Units::Auto,
+  modifiers::TextModifiers,
+  prelude::{
+    ActionModifiers, Context, EmitContext, LayoutModifiers, LensExt,
+    Units::{Pixels, Stretch},
+  },
+  style::FontWeightKeyword,
+  view::Handle,
+  views::{Checkbox, Label, VStack},
 };
+use std::any::Any;
 
 pub struct ParamCheckbox {}
 
@@ -17,7 +23,7 @@ impl ParamCheckbox {
     param_ptr: ParamPtr,
     params_to_param: F,
     on_change: C,
-  ) -> Handle<'a, VStack> 
+  ) -> Handle<'a, VStack>
   where
     L: 'static + Lens + Copy + Send + Sync,
     <L as Lens>::Source: 'static,
@@ -32,9 +38,10 @@ impl ParamCheckbox {
         .font_weight(FontWeightKeyword::SemiBold)
         .text_wrap(true)
         .child_space(Stretch(1.0));
-      
+
       Checkbox::new(
-        cx, lens.map(move |p: &<L as Lens>::Target| params_to_param(p).modulated_plain_value())
+        cx,
+        lens.map(move |p: &<L as Lens>::Target| params_to_param(p).modulated_plain_value()),
       )
       .on_press(move |cx| {
         let current_normalized_value = lens

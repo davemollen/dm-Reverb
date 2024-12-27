@@ -1,7 +1,7 @@
 extern crate lv2;
 extern crate reverb;
 use lv2::prelude::*;
-use reverb::{Reverb, Params};
+use reverb::{Params, Reverb};
 
 #[derive(PortCollection)]
 struct Ports {
@@ -24,7 +24,7 @@ struct Ports {
 #[uri("https://github.com/davemollen/dm-Reverb")]
 struct DmReverb {
   reverb: Reverb,
-  params: Params
+  params: Params,
 }
 
 impl Plugin for DmReverb {
@@ -69,10 +69,9 @@ impl Plugin for DmReverb {
 
     input_channels.zip(output_channels).for_each(
       |((input_left, input_right), (output_left, output_right))| {
-        (*output_left, *output_right) = self.reverb.process(
-          (*input_left, *input_right),
-          &mut self.params
-        );
+        (*output_left, *output_right) = self
+          .reverb
+          .process((*input_left, *input_right), &mut self.params);
       },
     );
   }

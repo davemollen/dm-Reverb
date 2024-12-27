@@ -1,5 +1,5 @@
 use nih_plug::prelude::*;
-use reverb::{Reverb, Params as ProcessedParams};
+use reverb::{Params as ProcessedParams, Reverb};
 mod reverb_parameters;
 use reverb_parameters::ReverbParameters;
 use std::sync::Arc;
@@ -17,7 +17,7 @@ impl Default for DmReverb {
     Self {
       params: params.clone(),
       reverb: Reverb::new(44100.),
-      processed_params: ProcessedParams::new(44100.)
+      processed_params: ProcessedParams::new(44100.),
     }
   }
 }
@@ -69,16 +69,16 @@ impl Plugin for DmReverb {
     _context: &mut impl ProcessContext<Self>,
   ) -> ProcessStatus {
     self.processed_params.set(
-      if self.params.reverse.value() { 1. } else { 0. }, 
-      self.params.predelay.value(), 
-      self.params.size.value(), 
-      self.params.speed.value(), 
-      self.params.depth.value(), 
-      self.params.absorb.value(), 
-      self.params.decay.value(), 
-      self.params.tilt.value(), 
-      self.params.shimmer.value(), 
-      self.params.mix.value()
+      if self.params.reverse.value() { 1. } else { 0. },
+      self.params.predelay.value(),
+      self.params.size.value(),
+      self.params.speed.value(),
+      self.params.depth.value(),
+      self.params.absorb.value(),
+      self.params.decay.value(),
+      self.params.tilt.value(),
+      self.params.shimmer.value(),
+      self.params.mix.value(),
     );
 
     buffer.iter_samples().for_each(|mut channel_samples| {
@@ -86,10 +86,9 @@ impl Plugin for DmReverb {
       let left_channel = channel_iterator.next().unwrap();
       let right_channel = channel_iterator.next().unwrap();
 
-      (*left_channel, *right_channel) = self.reverb.process(
-        (*left_channel, *right_channel),
-        &mut self.processed_params
-      );
+      (*left_channel, *right_channel) = self
+        .reverb
+        .process((*left_channel, *right_channel), &mut self.processed_params);
     });
     ProcessStatus::Normal
   }

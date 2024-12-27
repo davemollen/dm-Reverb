@@ -7,24 +7,20 @@ pub mod shared {
   pub mod stereo_delay_line;
 }
 mod mix;
-mod predelay;
 mod params;
+mod predelay;
 mod taps;
 mod tilt_filter;
-use {
-  mix::Mix, predelay::PreDelay,
-  params::Smoother,
-  tilt_filter::TiltFilter,
-};
+use {mix::Mix, params::Smoother, predelay::PreDelay, tilt_filter::TiltFilter};
 pub use {
   params::Params,
-  taps::{EarlyReflections, Taps}
+  taps::{EarlyReflections, Taps},
 };
 
 pub struct Reverb {
   predelay: PreDelay,
   taps: Taps,
-  tilt_filter: TiltFilter
+  tilt_filter: TiltFilter,
 }
 
 impl Reverb {
@@ -36,11 +32,7 @@ impl Reverb {
     }
   }
 
-  pub fn process(
-    &mut self,
-    input: (f32, f32),
-    params: &mut Params
-  ) -> (f32, f32) {
+  pub fn process(&mut self, input: (f32, f32), params: &mut Params) -> (f32, f32) {
     let reverse = params.reverse.next();
     let predelay = params.predelay.next();
     let size = params.size.next();
