@@ -15,7 +15,7 @@ impl Reverse {
     }
   }
 
-  pub fn process(&mut self, delay_line: &mut StereoDelayLine, time: f32) -> (f32, f32) {
+  pub fn process(&mut self, delay_line: &StereoDelayLine, time: f32) -> (f32, f32) {
     let freq = 1000. / time;
     let phasor_a = self.phasor.process(freq) * 2.;
     let phasor_b = Self::wrap(phasor_a + 1.);
@@ -37,7 +37,7 @@ impl Reverse {
 
   fn read_delay_line(
     &mut self,
-    delay_line: &mut StereoDelayLine,
+    delay_line: &StereoDelayLine,
     phasor: f32,
     time: f32,
     gain: f32,

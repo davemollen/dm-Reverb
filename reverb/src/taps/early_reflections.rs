@@ -34,7 +34,7 @@ impl EarlyReflections {
     }
   }
 
-  pub fn process(&mut self, size: f32, taps: &mut [DelayLine; 4]) -> (f32, f32) {
+  pub fn process(&self, size: f32, taps: &[DelayLine; 4]) -> (f32, f32) {
     let gain = (size - MIN_SIZE) * Self::SIZE_MULTIPLIER + MINUS_NINE_DB;
 
     (

@@ -99,7 +99,7 @@ impl Taps {
     decay: f32,
     shimmer: f32,
   ) -> (f32, f32) {
-    let early_reflections = self.early_reflections.process(size, &mut self.delay_lines);
+    let early_reflections = self.early_reflections.process(size, &self.delay_lines);
 
     let delay_network_taps = self.read_from_delay_network(size, speed, depth);
     let average = self.average.get();
@@ -116,7 +116,7 @@ impl Taps {
     );
     self.diffuse_and_write(absorb_output, diffuse, decay);
 
-    self.mix_delay_network_and_reflections(
+    Self::mix_delay_network_and_reflections(
       delay_network_output,
       early_reflections,
       Self::retrieve_gain_compensation(average, 0.4),
@@ -185,7 +185,6 @@ impl Taps {
   }
 
   fn mix_delay_network_and_reflections(
-    &mut self,
     (left_delay_network_out, right_delay_network_out): (f32, f32),
     early_reflections: (f32, f32),
     gain_compensation: f32,

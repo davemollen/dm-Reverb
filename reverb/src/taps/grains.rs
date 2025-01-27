@@ -28,7 +28,7 @@ impl Grains {
 
   pub fn process(
     &mut self,
-    delay_line: &mut DelayLine,
+    delay_line: &DelayLine,
     size: f32,
     time_fraction: f32,
     lfo_phase: f32,
@@ -54,7 +54,7 @@ impl Grains {
 
   fn apply_grains(
     &mut self,
-    delay_line: &mut DelayLine,
+    delay_line: &DelayLine,
     size: f32,
     time_fraction: f32,
     lfo_phase: f32,

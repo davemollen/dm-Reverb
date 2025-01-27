@@ -9,7 +9,7 @@ use super::grains::Grains;
 
 pub trait DelayRead {
   fn delay_network_read(
-    &mut self,
+    &self,
     size: f32,
     time_fraction: f32,
     lfo_phase: f32,
@@ -19,7 +19,7 @@ pub trait DelayRead {
   ) -> f32;
 
   fn vibrato_read(
-    &mut self,
+    &self,
     size: f32,
     lfo_phase: f32,
     lfo_phase_offset: f32,
@@ -28,7 +28,7 @@ pub trait DelayRead {
   ) -> f32;
 
   fn grain_read(
-    &mut self,
+    &self,
     grains: &mut Grains,
     size: f32,
     time_fraction: f32,
@@ -39,7 +39,7 @@ pub trait DelayRead {
 
 impl DelayRead for DelayLine {
   fn delay_network_read(
-    &mut self,
+    &self,
     size: f32,
     time_fraction: f32,
     lfo_phase: f32,
@@ -57,7 +57,7 @@ impl DelayRead for DelayLine {
   }
 
   fn vibrato_read(
-    &mut self,
+    &self,
     size: f32,
     lfo_phase: f32,
     lfo_phase_offset: f32,
@@ -76,7 +76,7 @@ impl DelayRead for DelayLine {
   }
 
   fn grain_read(
-    &mut self,
+    &self,
     grains: &mut Grains,
     size: f32,
     time_fraction: f32,

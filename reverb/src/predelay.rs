@@ -25,11 +25,11 @@ impl PreDelay {
     let predelay_output = if reverse == 0. {
       self.delay_line.read(time, Interpolation::Linear)
     } else if reverse == 1. {
-      self.reverse.process(&mut self.delay_line, time)
+      self.reverse.process(&self.delay_line, time)
     } else {
       Self::mix(
         self.delay_line.read(time, Interpolation::Linear),
-        self.reverse.process(&mut self.delay_line, time),
+        self.reverse.process(&self.delay_line, time),
         reverse,
       )
     };
