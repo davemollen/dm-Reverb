@@ -1,6 +1,6 @@
 use std::{
   f32,
-  simd::{f32x4, num::SimdFloat},
+  simd::{cmp::SimdPartialOrd, f32x4, num::SimdFloat},
 };
 
 pub struct DcBlock {
@@ -19,13 +19,14 @@ impl DcBlock {
   }
 
   pub fn process(&mut self, x: f32x4) -> f32x4 {
-    if (x - self.xm1).abs() <= f32x4::splat(f32::EPSILON) {
-      self.xm1 = x;
-      return x;
-    }
     let y = x - self.xm1 + self.coeff * self.ym1;
     self.xm1 = x;
-    self.ym1 = y;
+    self.ym1 = Self::flush_denormal(y);
     y
+  }
+
+  fn flush_denormal(x: f32x4) -> f32x4 {
+    let mask = x.is_subnormal();
+    mask.select(f32x4::splat(0.0), x)
   }
 }

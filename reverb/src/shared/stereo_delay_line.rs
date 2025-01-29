@@ -1,5 +1,7 @@
 use std::f32::consts::PI;
 
+use super::float_ext::FloatExt;
+
 #[allow(dead_code)]
 #[derive(Clone, Copy)]
 pub enum Interpolation {
@@ -40,7 +42,7 @@ impl StereoDelayLine {
   }
 
   pub fn write(&mut self, value: (f32, f32)) {
-    self.buffer[self.write_pointer] = value;
+    self.buffer[self.write_pointer] = (value.0.flush_denormal(), value.1.flush_denormal());
     self.write_pointer = self.write_pointer + 1 & self.wrap;
   }
 

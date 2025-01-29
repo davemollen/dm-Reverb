@@ -1,4 +1,4 @@
-use std::simd::f32x4;
+use std::simd::{f32x4, num::SimdFloat};
 
 pub struct OnePoleFilter {
   t: f32,
@@ -17,7 +17,12 @@ impl OnePoleFilter {
     let b1 = f32x4::splat(absorb * self.t);
     let a0 = f32x4::splat(1.0) - b1;
 
-    self.z = input * a0 + self.z * b1;
+    self.z = Self::flush_denormal(input * a0 + self.z * b1);
     self.z
+  }
+
+  fn flush_denormal(x: f32x4) -> f32x4 {
+    let mask = x.is_subnormal();
+    mask.select(f32x4::splat(0.0), x)
   }
 }

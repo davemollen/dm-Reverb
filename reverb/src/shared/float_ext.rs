@@ -16,6 +16,7 @@ pub trait FloatExt {
   fn fast_pow(self, exponent: Self) -> Self;
   fn fast_exp(self) -> Self;
   fn mstosamps(self, sample_rate: Self) -> Self;
+  fn flush_denormal(self) -> Self;
 }
 
 impl FloatExt for f32 {
@@ -133,6 +134,15 @@ impl FloatExt for f32 {
   /// Convert milliseconds to samples based on the samplerate.
   fn mstosamps(self, sample_rate: Self) -> Self {
     self * 0.001 * sample_rate
+  }
+
+  /// Replace denormal values with zero
+  fn flush_denormal(self) -> Self {
+    if self.is_subnormal() {
+      0.
+    } else {
+      self
+    }
   }
 }
 
