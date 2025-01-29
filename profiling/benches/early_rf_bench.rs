@@ -11,7 +11,7 @@ fn generate_signal_stream(length: usize) -> Vec<f32> {
 
 fn early_rf_bench(c: &mut Criterion) {
   let sample_rate = 44100.;
-  let mut early_rf = EarlyReflections::new();
+  let early_rf = EarlyReflections::new();
   let mut delay_lines = [
     DelayLine::new((sample_rate * 1.) as usize, sample_rate),
     DelayLine::new((sample_rate * 1.) as usize, sample_rate),
@@ -26,7 +26,7 @@ fn early_rf_bench(c: &mut Criterion) {
         delay_lines.iter_mut().for_each(|delay_line| {
           delay_line.write(*signal);
         });
-        early_rf.process(40., &mut delay_lines);
+        early_rf.process(40., &delay_lines);
       }
     })
   });
