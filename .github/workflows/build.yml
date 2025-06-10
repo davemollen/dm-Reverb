@@ -107,7 +107,7 @@ jobs:
         run: zip -r $ARCHIVE_NAME.zip $ARCHIVE_NAME
 
       - name: Add zip to release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631
         with:
           name: ${{github.ref_name}}
           files: ${{ env.ARCHIVE_NAME }}.zip
@@ -157,7 +157,7 @@ jobs:
           zip -r $ARCHIVE_NAME.zip $ARCHIVE_NAME
 
       - name: Add zip to release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631
         with:
           name: ${{github.ref_name}}
           files: ${{ env.ARCHIVE_NAME }}.zip
