@@ -34,6 +34,7 @@ pub(crate) fn create(
     editor_state,
     ViziaTheming::Custom,
     move |cx, gui_context| {
+      assets::register_noto_sans_regular(cx);
       vizia_assets::register_roboto(cx);
       vizia_assets::register_roboto_bold(cx);
       cx.add_stylesheet(STYLE).ok();
