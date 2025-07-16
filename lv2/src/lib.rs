@@ -5,20 +5,20 @@ use reverb::{Params, Reverb};
 
 #[derive(PortCollection)]
 struct Ports {
-  size: InputPort<Control>,
-  predelay: InputPort<Control>,
-  reverse: InputPort<Control>,
-  speed: InputPort<Control>,
-  depth: InputPort<Control>,
-  absorb: InputPort<Control>,
-  decay: InputPort<Control>,
-  tilt: InputPort<Control>,
-  shimmer: InputPort<Control>,
-  mix: InputPort<Control>,
-  input_left: InputPort<Audio>,
-  input_right: InputPort<Audio>,
-  output_left: OutputPort<Audio>,
-  output_right: OutputPort<Audio>,
+  size: InputPort<InPlaceControl>,
+  predelay: InputPort<InPlaceControl>,
+  reverse: InputPort<InPlaceControl>,
+  speed: InputPort<InPlaceControl>,
+  depth: InputPort<InPlaceControl>,
+  absorb: InputPort<InPlaceControl>,
+  decay: InputPort<InPlaceControl>,
+  tilt: InputPort<InPlaceControl>,
+  shimmer: InputPort<InPlaceControl>,
+  mix: InputPort<InPlaceControl>,
+  input_left: InputPort<InPlaceAudio>,
+  input_right: InputPort<InPlaceAudio>,
+  output_left: OutputPort<InPlaceAudio>,
+  output_right: OutputPort<InPlaceAudio>,
 }
 
 #[uri("https://github.com/davemollen/dm-Reverb")]
@@ -49,29 +49,28 @@ impl Plugin for DmReverb {
   // iterates over.
   fn run(&mut self, ports: &mut Ports, _features: &mut (), _sample_count: u32) {
     self.params.set(
-      *ports.reverse,
-      *ports.predelay,
-      *ports.size,
-      *ports.speed,
-      *ports.depth * 0.01,
-      *ports.absorb * 0.01,
-      *ports.decay * 0.01,
-      *ports.tilt * 0.01,
-      *ports.shimmer * 0.01,
-      *ports.mix * 0.01,
+      ports.reverse.get(),
+      ports.predelay.get(),
+      ports.size.get(),
+      ports.speed.get(),
+      ports.depth.get() * 0.01,
+      ports.absorb.get() * 0.01,
+      ports.decay.get() * 0.01,
+      ports.tilt.get() * 0.01,
+      ports.shimmer.get() * 0.01,
+      ports.mix.get() * 0.01,
     );
 
     let input_channels = ports.input_left.iter().zip(ports.input_right.iter());
-    let output_channels = ports
-      .output_left
-      .iter_mut()
-      .zip(ports.output_right.iter_mut());
+    let output_channels = ports.output_left.iter().zip(ports.output_right.iter());
 
     input_channels.zip(output_channels).for_each(
       |((input_left, input_right), (output_left, output_right))| {
-        (*output_left, *output_right) = self
+        let output = self
           .reverb
-          .process((*input_left, *input_right), &mut self.params);
+          .process((input_left.get(), input_right.get()), &mut self.params);
+        output_left.set(output.0);
+        output_right.set(output.1);
       },
     );
   }
