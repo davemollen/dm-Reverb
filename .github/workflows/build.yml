@@ -15,8 +15,8 @@ env:
   mod_package_name: dm-reverb
 
 jobs:
-  package-nih-plug:
-    name: Package nih-plug binaries
+  package-plugin-formats:
+    name: Package plugin formats
     strategy:
       matrix:
         include:
@@ -84,15 +84,36 @@ jobs:
             fi
           fi
 
+      - name: Build lv2 plugin
+        working-directory: ./lv2
+        run: |
+          runner_name=${{ matrix.name }}
+          if [[ $runner_name = 'macos' ]]; then
+            MACOSX_DEPLOYMENT_TARGET=10.15 cargo build --release --target x86_64-apple-darwin
+            MACOSX_DEPLOYMENT_TARGET=10.15 cargo build --release --target aarch64-apple-darwin
+            lipo -create target/x86_64-apple-darwin/release/lib$binary_name.dylib target/aarch64-apple-darwin/release/lib$binary_name.dylib -output target/release/lib$binary_name.dylib
+            file target/release/lib$binary_name.dylib
+            perl -pi -e "s|lib$binary_name.so|lib$binary_name.dylib|" $plugin_name.lv2/manifest.ttl
+            mv target/release/lib$binary_name.dylib $plugin_name.lv2
+          elif [[ $runner_name = 'windows' ]]; then
+            cargo build --release
+            perl -pi -e "s|lib$binary_name.so|$binary_name.dll|" $plugin_name.lv2/manifest.ttl
+            mv target/release/$binary_name.dll $plugin_name.lv2
+          else
+            cargo build --release
+            mv target/release/lib$binary_name.so $plugin_name.lv2
+          fi
+
       - name: Determine build archive name
         run: |
           # Windows (usually) doesn't like colons in file names
-          echo "ARCHIVE_NAME=$plugin_name-vst-and-clap-${{ matrix.name }}" >> "$GITHUB_ENV"
+          echo "ARCHIVE_NAME=$plugin_name-vst-clap-and-lv2-${{ matrix.name }}" >> "$GITHUB_ENV"
 
       - name: Move all packaged plugin into a directory
         run: |
           mkdir -p $ARCHIVE_NAME
           mv ./nih-plug/target/bundled/* $ARCHIVE_NAME
+          mv ./lv2/$plugin_name.lv2 $ARCHIVE_NAME
 
       - name: Rename plugins
         run: |
