@@ -5,6 +5,7 @@ authors = ["davemollen <davemollen@gmail.com>"]
 edition = "2021"
 
 [dependencies]
+# TODO: merge to main branch when in-place processing works
 lv2 = { git = "https://github.com/davemollen/rust-lv2.git", branch = "feature/in-place-processing", features = [
     "minimal_plugin",
 ] }
