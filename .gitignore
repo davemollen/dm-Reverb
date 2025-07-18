@@ -1,2 +1,5 @@
 target
 .DS_Store
+*libdm_reverb.so
+*libdm_reverb.dylib
+*libdm_reverb.dll
