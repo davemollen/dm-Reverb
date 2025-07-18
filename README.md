@@ -10,6 +10,7 @@ More technical information about the Erbe-Verb design can be found in this [talk
 
 - [VST3 and CLAP installation](#VST3-and-CLAP-installation)
 - [MOD installation](#MOD-installation)
+- [MOD Desktop installation](#MOD-Desktop-installation)
 - [Copyright notices](#Copyright-notices)
 
 ## VST3 and CLAP installation
@@ -27,6 +28,10 @@ Install the plugin from the MOD Audio plugin store.
 The latest MOD builds can also be found on the [releases page](https://github.com/davemollen/dm-Reverb/releases).
 
 If you want to build the plugin on your own machine check out the [mod-plugin-builder repository](https://github.com/moddevices/mod-plugin-builder) for instructions.
+
+## MOD Desktop installation
+
+You can download the MOD Desktop lv2 plugin for Linux, Windows and macOS from the [releases page](https://github.com/davemollen/dm-Reverb/releases). You can use the plugin in other lv2 hosts too, but you'll only have a GUI on MOD Desktop.
 
 ## Copyright notices
 
