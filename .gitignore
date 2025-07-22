@@ -1,6 +1,6 @@
 target
 .DS_Store
 flamegraph.svg
-*libdm_reverb.so
-*libdm_reverb.dylib
-*libdm_reverb.dll
+lv2/**/*.so
+lv2/**/*.dylib
+lv2/**/*.dll
