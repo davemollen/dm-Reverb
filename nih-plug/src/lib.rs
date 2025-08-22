@@ -23,7 +23,7 @@ impl Default for DmReverb {
 }
 
 impl Plugin for DmReverb {
-  const NAME: &'static str = "dm-Reverb";
+  const NAME: &'static str = "Reverb";
   const VENDOR: &'static str = "DM";
   const URL: &'static str = "https://github.com/davemollen/dm-Reverb";
   const EMAIL: &'static str = "davemollen@gmail.com";
