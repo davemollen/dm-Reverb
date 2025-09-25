@@ -21,6 +21,7 @@ pub struct Reverb {
   predelay: PreDelay,
   taps: Taps,
   tilt_filter: TiltFilter,
+  mix: Mix,
 }
 
 impl Reverb {
@@ -29,6 +30,7 @@ impl Reverb {
       predelay: PreDelay::new(sample_rate),
       taps: Taps::new(sample_rate),
       tilt_filter: TiltFilter::new(sample_rate),
+      mix: Mix::new(),
     }
   }
 
@@ -59,6 +61,6 @@ impl Reverb {
     );
 
     let tilt_filter_output = self.tilt_filter.process(taps_output, tilt);
-    Mix::process(input, tilt_filter_output, mix)
+    self.mix.process(input, tilt_filter_output, mix)
   }
 }

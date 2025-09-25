@@ -1,17 +1,32 @@
 use crate::shared::float_ext::FloatExt;
 use std::f32::consts::FRAC_PI_2;
 
-pub struct Mix;
+pub struct Mix {
+  mix: f32,
+  dry_gain: f32,
+  wet_gain: f32,
+}
 
 impl Mix {
-  pub fn process(dry: (f32, f32), wet: (f32, f32), mix: f32) -> (f32, f32) {
-    let dry_gain = (mix * FRAC_PI_2).fast_cos();
-    let wet_gain = (mix * FRAC_PI_2).fast_sin();
-    let dry_left = dry.0 * dry_gain;
-    let dry_right = dry.1 * dry_gain;
-    let wet_left = wet.0 * wet_gain;
-    let wet_right = wet.1 * wet_gain;
-    (dry_left + wet_left, dry_right + wet_right)
+  pub fn new() -> Self {
+    Self {
+      mix: 0.,
+      dry_gain: 1.,
+      wet_gain: 0.,
+    }
+  }
+
+  pub fn process(&mut self, dry: (f32, f32), wet: (f32, f32), mix: f32) -> (f32, f32) {
+    if mix != self.mix {
+      let factor = mix * FRAC_PI_2;
+      self.mix = mix;
+      self.dry_gain = factor.fast_cos();
+      self.wet_gain = factor.fast_sin();
+    }
+    (
+      dry.0 * self.dry_gain + wet.0 * self.wet_gain,
+      dry.1 * self.dry_gain + wet.1 * self.wet_gain,
+    )
   }
 }
 
@@ -19,23 +34,26 @@ impl Mix {
 mod tests {
   use super::Mix;
 
-  fn assert_approximately_eq(left: f32, right: f32) {
-    assert_eq!(
-      (left * 1000.).floor() / 1000.,
-      (right * 1000.).floor() / 1000.
-    )
+  fn assert_approximately_eq(left: f32, right: f32, digits: usize) {
+    let tol = 10f32.powi(-(digits as i32));
+    let diff = (left - right).abs();
+    assert!(
+      diff <= tol,
+      "Values are not approximately equal: left={left}, right={right}, diff={diff}, tol={tol}"
+    );
   }
 
   #[test]
   fn mix() {
-    let first = Mix::process((0., 0.), (1., 1.), 0.);
-    let second = Mix::process((0., 0.), (1., 1.), 0.5);
-    let third = Mix::process((0., 0.), (1., 1.), 1.);
-    assert_approximately_eq(first.0, 0.);
-    assert_approximately_eq(first.1, 0.);
-    assert_approximately_eq(second.0, 0.707);
-    assert_approximately_eq(second.1, 0.707);
-    assert_approximately_eq(third.0, 1.);
-    assert_approximately_eq(third.1, 1.);
+    let mut mix = Mix::new();
+    let first = mix.process((0., 0.), (1., 1.), 0.);
+    let second = mix.process((0., 0.), (1., 1.), 0.5);
+    let third = mix.process((0., 0.), (1., 1.), 1.);
+    assert_approximately_eq(first.0, 0., 3);
+    assert_approximately_eq(first.1, 0., 3);
+    assert_approximately_eq(second.0, 0.707, 3);
+    assert_approximately_eq(second.1, 0.707, 3);
+    assert_approximately_eq(third.0, 1., 3);
+    assert_approximately_eq(third.1, 1., 3);
   }
 }
