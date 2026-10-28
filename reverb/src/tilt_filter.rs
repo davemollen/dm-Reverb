@@ -14,7 +14,7 @@ const R_TILT: f32 = 140000.;
 pub struct TiltFilter {
   bilinear_transform: BilinearTransform,
   biquad_filter: BiquadFilter,
-  prev_tilt: f32,
+  prev_tilt: Option<f32>,
   z_domain_coefficients: ([f32; 3], [f32; 3]),
 }
 
@@ -34,7 +34,7 @@ impl TiltFilter {
     Self {
       bilinear_transform: BilinearTransform::new(sample_rate),
       biquad_filter: BiquadFilter::new(),
-      prev_tilt: 0.,
+      prev_tilt: None,
       z_domain_coefficients: ([0.; 3], [0.; 3]),
     }
   }
@@ -44,11 +44,12 @@ impl TiltFilter {
   }
 
   pub fn process(&mut self, input: (f32, f32), tilt: f32) -> (f32, f32) {
-    if tilt != self.prev_tilt {
+    if self.prev_tilt.map_or(true, |value| value != tilt) {
       let s_domain_coefficients = self.get_s_domain_coefficients(tilt);
       self.z_domain_coefficients = self.bilinear_transform.process(s_domain_coefficients);
-      self.prev_tilt = tilt;
+      self.prev_tilt = Some(tilt);
     }
+
     self
       .biquad_filter
       .process(input, self.z_domain_coefficients)
