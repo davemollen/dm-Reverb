@@ -3,19 +3,22 @@ pub mod shared {
   pub mod constants;
   pub mod delay_line;
   pub mod float_ext;
+  pub mod macros;
   pub mod phasor;
   pub mod stereo_delay_line;
 }
+mod bypass;
 mod mix;
 mod params;
 mod predelay;
 mod taps;
 mod tilt_filter;
-use {mix::Mix, params::Smoother, predelay::PreDelay, tilt_filter::TiltFilter};
 pub use {
+  bypass::Bypass,
   params::Params,
   taps::{EarlyReflections, Taps},
 };
+use {mix::Mix, params::Smoother, predelay::PreDelay, tilt_filter::TiltFilter};
 
 pub struct Reverb {
   predelay: PreDelay,

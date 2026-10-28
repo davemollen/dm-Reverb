@@ -1,7 +1,7 @@
 extern crate lv2;
 extern crate reverb;
 use lv2::prelude::*;
-use reverb::{Params, Reverb};
+use reverb::{Bypass, Params, Reverb};
 
 #[derive(PortCollection)]
 struct Ports {
@@ -19,12 +19,14 @@ struct Ports {
   input_right: InputPort<InPlaceAudio>,
   output_left: OutputPort<InPlaceAudio>,
   output_right: OutputPort<InPlaceAudio>,
+  enabled: InputPort<InPlaceControl>,
 }
 
 #[uri("https://github.com/davemollen/dm-Reverb")]
 struct DmReverb {
   reverb: Reverb,
   params: Params,
+  bypass: Bypass,
 }
 
 impl Plugin for DmReverb {
@@ -42,6 +44,7 @@ impl Plugin for DmReverb {
     Some(Self {
       reverb: Reverb::new(sample_rate),
       params: Params::new(sample_rate),
+      bypass: Bypass::new(sample_rate),
     })
   }
 
@@ -49,11 +52,25 @@ impl Plugin for DmReverb {
   fn activate(&mut self, _features: &mut Self::InitFeatures) {
     self.reverb.reset();
     self.params.reset();
+    self.bypass.reset();
   }
 
   // Process a chunk of audio. The audio ports are dereferenced to slices, which the plugin
   // iterates over.
-  fn run(&mut self, ports: &mut Ports, _features: &mut (), _sample_count: u32) {
+  fn run(&mut self, ports: &mut Ports, _features: &mut (), sample_count: u32) {
+    self.bypass.set_enabled(ports.enabled.get() == 0., || {
+      self.reverb.reset();
+      self.params.reset();
+    });
+
+    if self.bypass.is_done_activating() {
+      ports.output_left.copy_from(&ports.input_left, sample_count);
+      ports
+        .output_right
+        .copy_from(&ports.input_right, sample_count);
+      return;
+    }
+
     self.params.set(
       ports.reverse.get(),
       ports.predelay.get(),
@@ -69,12 +86,11 @@ impl Plugin for DmReverb {
 
     let input_channels = ports.input_left.iter().zip(ports.input_right.iter());
     let output_channels = ports.output_left.iter().zip(ports.output_right.iter());
-
     input_channels.zip(output_channels).for_each(
       |((input_left, input_right), (output_left, output_right))| {
-        let output = self
-          .reverb
-          .process((input_left.get(), input_right.get()), &mut self.params);
+        let dry = (input_left.get(), input_right.get());
+        let wet = self.reverb.process(dry, &mut self.params);
+        let output = self.bypass.process(dry, wet);
         output_left.set(output.0);
         output_right.set(output.1);
       },

@@ -1,6 +1,6 @@
 mod smooth;
 use smooth::ExponentialSmooth;
-pub use smooth::Smoother;
+pub use smooth::{LinearSmooth, Smoother};
 
 use crate::shared::constants::MAX_DEPTH;
 
