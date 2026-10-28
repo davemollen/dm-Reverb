@@ -21,6 +21,11 @@ impl PreDelay {
     }
   }
 
+  pub fn reset(&mut self) {
+    self.delay_line.reset();
+    self.reverse.reset();
+  }
+
   pub fn process(&mut self, input: (f32, f32), time: f32, reverse: f32) -> (f32, f32) {
     let predelay_output = if reverse == 0. {
       self.delay_line.read(time, Interpolation::Linear)

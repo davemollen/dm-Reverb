@@ -15,6 +15,11 @@ impl DcBlock {
     }
   }
 
+  pub fn reset(&mut self) {
+    self.xm1 = f32x4::splat(0.);
+    self.ym1 = f32x4::splat(0.);
+  }
+
   pub fn process(&mut self, x: f32x4) -> f32x4 {
     let y = x - self.xm1 + self.coeff * self.ym1;
     self.xm1 = x;

@@ -88,6 +88,23 @@ impl Taps {
     }
   }
 
+  pub fn reset(&mut self) {
+    for delay_line in self.delay_lines.iter_mut() {
+      delay_line.reset();
+    }
+    for grains in self.grains.iter_mut() {
+      grains.reset();
+    }
+    self.dc_block.reset();
+    self.absorbance.reset();
+    for diffuser in self.diffusers.iter_mut() {
+      diffuser.reset();
+    }
+    self.lfo_phasor.reset();
+    self.shimmer.reset();
+    self.average.reset();
+  }
+
   pub fn process(
     &mut self,
     input: (f32, f32),

@@ -15,6 +15,10 @@ impl Reverse {
     }
   }
 
+  pub fn reset(&mut self) {
+    self.phasor.reset();
+  }
+
   pub fn process(&mut self, delay_line: &StereoDelayLine, time: f32) -> (f32, f32) {
     let freq = 1000. / time;
     let phasor_a = self.phasor.process(freq) * 2.;

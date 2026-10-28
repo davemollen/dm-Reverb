@@ -23,6 +23,11 @@ impl Shimmer {
     }
   }
 
+  pub fn reset(&mut self) {
+    self.delay_line.reset();
+    self.phasor.reset();
+  }
+
   pub fn process(&mut self, dry: (f32, f32), wet: (f32, f32), mix: f32) -> (f32, f32) {
     let out = if mix > 0. {
       let grains_out = self.apply_shimmer();

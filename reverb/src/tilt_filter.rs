@@ -35,6 +35,10 @@ impl TiltFilter {
     }
   }
 
+  pub fn reset(&mut self) {
+    self.biquad_filter.reset();
+  }
+
   pub fn process(&mut self, input: (f32, f32), tilt: f32) -> (f32, f32) {
     let s_domain_coefficients = self.get_s_domain_coefficients(tilt);
     let z_domain_coefficients = self.bilinear_transform.process(s_domain_coefficients);

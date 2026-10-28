@@ -7,6 +7,10 @@ impl BiquadFilter {
     Self { z: [(0.0, 0.0); 2] }
   }
 
+  pub fn reset(&mut self) {
+    self.z = [(0., 0.); 2];
+  }
+
   pub fn process(&mut self, x: (f32, f32), (b, a): ([f32; 3], [f32; 3])) -> (f32, f32) {
     let y = (x.0 * b[0] + self.z[0].0, x.1 * b[0] + self.z[0].1);
     self.z[0] = (

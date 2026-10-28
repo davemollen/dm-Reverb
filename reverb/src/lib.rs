@@ -34,6 +34,12 @@ impl Reverb {
     }
   }
 
+  pub fn reset(&mut self) {
+    self.predelay.reset();
+    self.taps.reset();
+    self.tilt_filter.reset();
+  }
+
   pub fn process(&mut self, input: (f32, f32), params: &mut Params) -> (f32, f32) {
     let reverse = params.reverse.next();
     let predelay = params.predelay.next();

@@ -26,6 +26,12 @@ impl Grains {
     }
   }
 
+  pub fn reset(&mut self) {
+    for delta in self.delta.iter_mut() {
+      delta.reset();
+    }
+  }
+
   pub fn process(
     &mut self,
     delay_line: &DelayLine,

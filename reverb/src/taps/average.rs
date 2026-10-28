@@ -15,6 +15,10 @@ impl Average {
     }
   }
 
+  pub fn reset(&mut self) {
+    self.z = 0.;
+  }
+
   pub fn get(&self) -> f32 {
     self.z.sqrt()
   }
